@@ -15,7 +15,12 @@ export default [
         require: 'readonly',
         describe: 'readonly',
         test: 'readonly',
-        expect: 'readonly'
+        expect: 'readonly',
+        jest: 'readonly',
+        beforeAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        global: 'readonly'
       }
     },
     rules: {}
