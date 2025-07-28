@@ -777,6 +777,26 @@ body {
     padding: var(--space-32);
 }
 
+/* Settings Screen */
+.settings-screen {
+    background: linear-gradient(135deg, var(--color-bg-2), var(--color-bg-3));
+}
+
+.settings-content {
+    background: rgba(var(--color-surface), 0.9);
+    padding: var(--space-32);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+}
+
+.settings-actions {
+    display: flex;
+    gap: var(--space-8);
+    justify-content: flex-end;
+}
+
 .game-title {
     font-size: 4rem;
     font-weight: var(--font-weight-bold);

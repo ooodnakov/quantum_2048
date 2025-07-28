@@ -1,7 +1,7 @@
-const { gameState, addRandomTile, BOARD_SIZE, getMaxTile } = require('../app.js');
+const { gameState, addRandomTile, getMaxTile, settings } = require('../app.js');
 
 beforeEach(() => {
-  gameState.board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+  gameState.board = Array(settings.boardSize).fill(null).map(() => Array(settings.boardSize).fill(0));
 });
 
 test('getMaxTile finds highest value', () => {
@@ -19,6 +19,6 @@ test('new tile scales with current max tile', () => {
   Math.random.mockRestore();
 });
 
-test('BOARD_SIZE reflects expanded grid', () => {
-  expect(BOARD_SIZE).toBe(6);
+test('boardSize reflects expanded grid', () => {
+  expect(settings.boardSize).toBe(6);
 });
