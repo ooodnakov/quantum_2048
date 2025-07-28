@@ -8,9 +8,6 @@ const DEFAULT_SETTINGS = {
 
 let settings = { ...DEFAULT_SETTINGS };
 
-// Exported constant for board size used in tests
-const BOARD_SIZE = settings.boardSize;
-
 // Game state
 
 let gameState = {
@@ -417,17 +414,7 @@ function transformBoard(board, direction, reverse = false) {
 
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
-            let { r: newR, c: newC } = transformCoord(r, c, direction, reverse);
-          
-            if (direction === 'left') {
-                [newR, newC] = reverse ? [c, r] : [r, c];
-            } else if (direction === 'right') {
-                [newR, newC] = reverse ? [c, settings.boardSize - 1 - r] : [r, settings.boardSize - 1 - c];
-            } else if (direction === 'up') {
-                [newR, newC] = reverse ? [r, c] : [c, r];
-            } else { // down
-                [newR, newC] = reverse ? [settings.boardSize - 1 - r, c] : [settings.boardSize - 1 - c, r];
-            }
+            const { r: newR, c: newC } = transformCoord(r, c, direction, reverse);
             if (reverse) {
                 newBoard[newR][newC] = { ...board[r][c] };
             } else {
@@ -741,7 +728,6 @@ if (typeof module !== 'undefined' && module.exports) {
         saveSettings,
         saveSettingsFromMenu,
         resetSettings,
-        settings,
-        BOARD_SIZE
+        settings
     };
 }
