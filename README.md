@@ -15,5 +15,6 @@ Quantum 2048: An Innovative 2048 Game with Multiple Creative Twists
 
 The game incorporates several 2024 gaming trends, including minimalist design with glassmorphism effects
 , particle animations for satisfying feedback, dynamic backgrounds that change based on achievement level, and responsive controls that work seamlessly on both desktop and mobile devices
+In particular, swipe gestures on touch screens allow smooth play on phones and tablets.
 
 The innovative combination of physics manipulation, temporal mechanics, and visual evolution creates a familiar yet fresh experience that maintains the addictive core of 2048 while offering entirely new strategic possibilities. Players must now consider not just tile positioning, but also gravity direction, time management, and color harmony - transforming a simple sliding puzzle into a multi-dimensional strategic challenge.
