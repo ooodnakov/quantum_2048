@@ -1,7 +1,7 @@
 {
-  "name": "quantum_2048",
+  "name": "quantum-2048",
   "version": "1.0.0",
-  "description": "Quantum 2048: An Innovative 2048 Game with Multiple Creative Twists",
+  "description": "Quantum 2048 game",
   "main": "app.js",
   "scripts": {
     "test": "jest"
@@ -11,6 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "jest": "^30.0.5"
+    "jest": "^30.0.5",
+    "jsdom": "^24.0.0"
   }
 }

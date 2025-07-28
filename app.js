@@ -467,13 +467,21 @@ document.addEventListener('keydown', (e) => {
 let touchStartX = 0;
 let touchStartY = 0;
 
-document.addEventListener('touchstart', (e) => {
+function handleTouchStart(e) {
+    if (!gameState.gameActive) return;
+    e.preventDefault();
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
-});
+}
 
-document.addEventListener('touchend', (e) => {
+function handleTouchMove(e) {
     if (!gameState.gameActive) return;
+    e.preventDefault();
+}
+
+function handleTouchEnd(e) {
+    if (!gameState.gameActive) return null;
+    e.preventDefault();
     
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
@@ -499,10 +507,21 @@ document.addEventListener('touchend', (e) => {
         
         const finalDirection = getMoveDirection(gravityKey);
         move(finalDirection);
+        return finalDirection;
     }
-});
+    return null;
+}
+
+document.addEventListener('touchstart', handleTouchStart, { passive: false });
+document.addEventListener('touchmove', handleTouchMove, { passive: false });
+document.addEventListener('touchend', handleTouchEnd, { passive: false });
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     updateDisplay();
 });
+
+// Export for testing environments
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { gameState, move, handleTouchStart, handleTouchMove, handleTouchEnd };
+}
