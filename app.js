@@ -59,6 +59,17 @@ function formatNumber(num) {
     return `${value}${suffix}`;
 }
 
+// Find the highest tile on the board without flattening the array
+function getMaxTile(board) {
+    let max = 0;
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            if (board[r][c] > max) max = board[r][c];
+        }
+    }
+    return max;
+}
+
 const GRAVITY_ARROWS = {
     north: '⬆️',
     east: '➡️',
@@ -141,7 +152,7 @@ function addRandomTile() {
     
     if (emptyCells.length > 0) {
         const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-        const maxTile = Math.max(2, ...gameState.board.flat());
+        const maxTile = Math.max(2, getMaxTile(gameState.board));
         const maxPower = Math.log2(maxTile);
         const exponentOffset = 3 + Math.floor(Math.random() * 3); // between 3 and 5 below max
         const newExponent = Math.max(1, Math.floor(maxPower) - exponentOffset);
@@ -393,7 +404,7 @@ function processRow(row) {
 
 // Check achievements
 function checkAchievements() {
-    const maxTile = Math.max(...gameState.board.flat());
+    const maxTile = getMaxTile(gameState.board);
     
     ACHIEVEMENTS.forEach(achievement => {
         if (maxTile >= achievement.tile && !gameState[`achievement_${achievement.tile}`]) {
@@ -419,7 +430,7 @@ function showAchievement(text) {
 
 // Update background level based on highest tile
 function updateBackgroundLevel() {
-    const maxTile = Math.max(...gameState.board.flat());
+    const maxTile = getMaxTile(gameState.board);
     const gameScreen = document.getElementById('gameScreen');
     
     // Remove all level classes
@@ -494,7 +505,7 @@ function endGame() {
     
     // Show achievements in game over screen
     const achievementsDiv = document.getElementById('achievements');
-    const maxTile = Math.max(...gameState.board.flat());
+    const maxTile = getMaxTile(gameState.board);
     achievementsDiv.innerHTML = `<p>Highest tile reached: <strong>${maxTile}</strong></p>`;
 }
 
@@ -575,5 +586,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for testing environments
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { gameState, move, handleTouchStart, handleTouchMove, handleTouchEnd, getTileColor, formatNumber, TILE_COLORS, BOARD_SIZE};
+    module.exports = { gameState, move, handleTouchStart, handleTouchMove, handleTouchEnd, getTileColor, formatNumber, TILE_COLORS, BOARD_SIZE, addRandomTile, getMaxTile };
 }
