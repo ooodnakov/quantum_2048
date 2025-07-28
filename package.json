@@ -1,0 +1,13 @@
+{
+  "name": "quantum-2048",
+  "version": "1.0.0",
+  "description": "Quantum 2048 game",
+  "main": "app.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jsdom": "^24.0.0"
+  }
+}
