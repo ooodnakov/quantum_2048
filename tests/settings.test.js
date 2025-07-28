@@ -50,4 +50,28 @@ describe('settings persistence', () => {
     app.saveSettingsFromMenu();
     expect(app.settings).toEqual(original);
   });
+
+  test('saving settings returns to start screen without starting game', () => {
+    document.body.innerHTML = `
+      <input id="settingBoardSize" value="6">
+      <input id="settingCrystals" value="3">
+      <input id="settingQuantumChance" value="10">
+      <input id="settingHistory" value="5">
+      <div id="score"></div>
+      <div id="bestScore"></div>
+      <div id="crystalCount"></div>
+      <div id="gravityArrow"></div>
+      <button id="rewindButton"></button>
+      <div id="gameBoard"></div>
+      <div id="gameScreen" class="screen hidden"></div>
+      <div id="gameOverScreen"></div>
+      <div id="particlesContainer"></div>
+      <div id="startScreen" class="screen hidden"></div>
+      <div id="settingsScreen" class="screen"></div>
+    `;
+    const app = require('../app.js');
+    app.saveSettingsFromMenu();
+    expect(document.getElementById('startScreen').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('gameScreen').classList.contains('hidden')).toBe(true);
+  });
 });
