@@ -1,5 +1,3 @@
-const {JSDOM} = require('jsdom');
-
 function setupDom() {
   const html = `
     <div id="score"></div>
@@ -11,11 +9,8 @@ function setupDom() {
     <div id="gameScreen"></div>
     <div id="particlesContainer"></div>
   `;
-  const dom = new JSDOM(html, { runScripts: "dangerously", url: "http://localhost" });
-  global.window = dom.window;
-  global.document = dom.window.document;
+  document.body.innerHTML = html;
   global.localStorage = window.localStorage;
-  return dom;
 }
 
 describe('touch swipe controls', () => {
