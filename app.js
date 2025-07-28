@@ -207,7 +207,7 @@ function addRandomTile() {
 }
 
 // Render board
-function renderBoard(merged = [], moveDir = null) {
+function renderBoard(merged = [], moveDir = null, movedTiles = [], quantumTiles = []) {
     const boardElement = document.getElementById('gameBoard');
     boardElement.innerHTML = '';
     boardElement.style.gridTemplateColumns = `repeat(${settings.boardSize}, 1fr)`;
@@ -243,7 +243,11 @@ function renderBoard(merged = [], moveDir = null) {
                     tileElement.classList.add('merged');
                 }
 
-                if (moveDir) {
+                if (quantumTiles.some(pos => pos.r === r && pos.c === c)) {
+                    tileElement.classList.add('quantum-jump');
+                }
+
+                if (moveDir && movedTiles.some(pos => pos.r === r && pos.c === c)) {
                     tileElement.classList.add(`move-${moveDir}`);
                 }
             }
@@ -359,12 +363,14 @@ function getMoveDirection(key) {
 // Move tiles
 function move(direction) {
     if (!gameState.gameActive) return;
-    
+
     saveGameState();
+    const previousBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
     let moved = false;
     let scoreGained = 0;
     const newBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
     const mergePositionsTransformed = [];
+    const quantumPositionsTransformed = [];
     
     // Transform board based on direction for easier processing
     let workingBoard = transformBoard(newBoard, direction);
@@ -377,12 +383,31 @@ function move(direction) {
         scoreGained += newRow.score;
         if (newRow.moved) moved = true;
         newRow.merges.forEach(idx => mergePositionsTransformed.push({ r, c: idx }));
+        newRow.quantumJumps.forEach(idx => quantumPositionsTransformed.push({ r, c: idx }));
     }
     
     // Transform back
     gameState.board = transformBoard(workingBoard, direction, true);
     const mergePositions = mergePositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
+    const quantumPositions = quantumPositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     
+    const movedPositions = [];
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
+            const tile = gameState.board[r][c];
+            if (tile.id !== null) {
+                for (let pr = 0; pr < settings.boardSize; pr++) {
+                    for (let pc = 0; pc < settings.boardSize; pc++) {
+                        const prevTile = previousBoard[pr][pc];
+                        if (prevTile.id === tile.id && (pr !== r || pc !== c)) {
+                            movedPositions.push({ r, c });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     if (moved) {
         gameState.score += scoreGained;
         
@@ -394,10 +419,14 @@ function move(direction) {
         
         addRandomTile();
         updateDisplay();
-        renderBoard(mergePositions, direction);
+        renderBoard(mergePositions, direction, movedPositions, quantumPositions);
         updateBackgroundLevel();
         checkAchievements();
-        createParticleEffect('merge');
+        if (quantumPositions.length > 0) {
+            createParticleEffect('quantum');
+        } else {
+            createParticleEffect('merge');
+        }
         
         // Check game over
         if (isGameOver()) {
@@ -446,20 +475,25 @@ function processRow(row) {
     let score = 0;
     let moved = row.some((tile, i) => tile.value !== (newRow[i] ? newRow[i].value : 0));
     const merges = [];
+    const quantumJumps = [];
     
     // Merge adjacent equal tiles
     for (let i = 0; i < newRow.length - 1; i++) {
         if (newRow[i].value === newRow[i + 1].value) {
             newRow[i] = { ...newRow[i], value: newRow[i].value * 2 };
-            score += newRow[i].value;
-            
+            let gained = newRow[i].value;
+            let quantum = false;
+
             // Check for quantum bonus
             if (Math.random() < settings.quantumBonusChance) {
-                score *= 2;
+                gained *= 2;
+                quantum = true;
             }
 
+            score += gained;
             newRow.splice(i + 1, 1);
             merges.push(i);
+            if (quantum) quantumJumps.push(i);
             moved = true;
         }
     }
@@ -469,7 +503,7 @@ function processRow(row) {
         newRow.push(createTile());
     }
 
-    return { row: newRow, score, moved, merges };
+    return { row: newRow, score, moved, merges, quantumJumps };
 }
 
 // Check achievements
@@ -522,7 +556,14 @@ function updateBackgroundLevel() {
 // Create particle effects
 function createParticleEffect(type) {
     const container = document.getElementById('particlesContainer');
-    const colors = type === 'time' ? ['#42a5f5', '#ab47bc'] : ['#ff6b6b', '#ffa726', '#ffeb3b'];
+    let colors;
+    if (type === 'time') {
+        colors = ['#42a5f5', '#ab47bc'];
+    } else if (type === 'quantum') {
+        colors = ['#e1bee7', '#81d4fa'];
+    } else {
+        colors = ['#ff6b6b', '#ffa726', '#ffeb3b'];
+    }
     
     for (let i = 0; i < 10; i++) {
         const particle = document.createElement('div');
@@ -728,6 +769,7 @@ if (typeof module !== 'undefined' && module.exports) {
         saveSettings,
         saveSettingsFromMenu,
         resetSettings,
-        settings
+        settings,
+        processRow
     };
 }
