@@ -1027,22 +1027,22 @@ body {
 }
 
 @keyframes moveLeft {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
-}
-
-@keyframes moveRight {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
 }
 
+@keyframes moveRight {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
 @keyframes moveUp {
-    from { transform: translateY(-100%); }
+    from { transform: translateY(100%); }
     to { transform: translateY(0); }
 }
 
 @keyframes moveDown {
-    from { transform: translateY(100%); }
+    from { transform: translateY(-100%); }
     to { transform: translateY(0); }
 }
 
