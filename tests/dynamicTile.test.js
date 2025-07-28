@@ -1,4 +1,4 @@
-const { gameState, addRandomTile, getMaxTile, settings } = require('../app.js');
+const { gameState, addRandomTile, getMaxTile, settings, processRow } = require('../app.js');
 
 beforeEach(() => {
   gameState.board = Array.from({ length: settings.boardSize }, () => (
@@ -23,4 +23,19 @@ test('new tile scales with current max tile', () => {
 
 test('boardSize reflects expanded grid', () => {
   expect(settings.boardSize).toBe(6);
+});
+
+test('quantum bonus records jump positions', () => {
+  const row = [
+    { id: 1, value: 2 },
+    { id: 2, value: 2 },
+    { id: null, value: 0 },
+    { id: null, value: 0 },
+    { id: null, value: 0 },
+    { id: null, value: 0 }
+  ];
+  jest.spyOn(Math, 'random').mockReturnValue(0); // ensure bonus
+  const result = processRow(row);
+  expect(result.quantumJumps).toEqual([0]);
+  Math.random.mockRestore();
 });
