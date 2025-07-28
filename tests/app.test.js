@@ -10,7 +10,6 @@ function setupDom() {
     <div id="particlesContainer"></div>
   `;
   document.body.innerHTML = html;
-  global.localStorage = window.localStorage;
 }
 
 describe('touch swipe controls', () => {

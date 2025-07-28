@@ -18,4 +18,7 @@ The game incorporates several 2024 gaming trends, including minimalist design wi
 In particular, swipe gestures on touch screens allow smooth play on phones and tablets.
 
 The innovative combination of physics manipulation, temporal mechanics, and visual evolution creates a familiar yet fresh experience that maintains the addictive core of 2048 while offering entirely new strategic possibilities. Players must now consider not just tile positioning, but also gravity direction, time management, and color harmony - transforming a simple sliding puzzle into a multi-dimensional strategic challenge.
-\n## Continuous Integration\nThis project uses GitHub Actions to run ESLint and Jest on every push and pull request.
+
+
+## Continuous Integration
+This project uses GitHub Actions to run ESLint and Jest on every push and pull request.
