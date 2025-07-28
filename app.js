@@ -144,7 +144,7 @@ function initGame() {
     // Initialize empty board
 
     gameState.board = Array.from({ length: settings.boardSize }, () => (
-        Array.from({ length: BOARD_SIZE }, () => createTile())
+        Array.from({ length: settings.boardSize }, () => createTile())
     ));
     gameState.nextId = 1;
     gameState.lastAdded = null;
@@ -415,16 +415,6 @@ function transformBoard(board, direction, reverse = false) {
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
             const { r: newR, c: newC } = transformCoord(r, c, direction, reverse);
-          
-            if (direction === 'left') {
-                [newR, newC] = reverse ? [c, r] : [r, c];
-            } else if (direction === 'right') {
-                [newR, newC] = reverse ? [c, settings.boardSize - 1 - r] : [r, settings.boardSize - 1 - c];
-            } else if (direction === 'up') {
-                [newR, newC] = reverse ? [r, c] : [c, r];
-            } else { // down
-                [newR, newC] = reverse ? [settings.boardSize - 1 - r, c] : [settings.boardSize - 1 - c, r];
-            }
             if (reverse) {
                 newBoard[newR][newC] = { ...board[r][c] };
             } else {
@@ -441,11 +431,11 @@ function transformCoord(r, c, direction, reverse = false) {
     if (direction === 'left') {
         [newR, newC] = reverse ? [c, r] : [r, c];
     } else if (direction === 'right') {
-        [newR, newC] = reverse ? [c, BOARD_SIZE - 1 - r] : [r, BOARD_SIZE - 1 - c];
+        [newR, newC] = reverse ? [c, settings.boardSize - 1 - r] : [r, settings.boardSize - 1 - c];
     } else if (direction === 'up') {
         [newR, newC] = reverse ? [r, c] : [c, r];
     } else {
-        [newR, newC] = reverse ? [BOARD_SIZE - 1 - r, c] : [BOARD_SIZE - 1 - c, r];
+        [newR, newC] = reverse ? [settings.boardSize - 1 - r, c] : [settings.boardSize - 1 - c, r];
     }
     return { r: newR, c: newC };
 }
@@ -731,7 +721,7 @@ if (typeof module !== 'undefined' && module.exports) {
         formatNumber,
         TILE_COLORS,
         transformBoard,
-        transformCoord
+        transformCoord,
         addRandomTile,
         getMaxTile,
         loadSettings,

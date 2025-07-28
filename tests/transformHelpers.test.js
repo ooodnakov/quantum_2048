@@ -1,4 +1,6 @@
-const { BOARD_SIZE, transformBoard, transformCoord } = require('../app.js');
+const { settings, transformBoard, transformCoord } = require('../app.js');
+
+const BOARD_SIZE = settings.boardSize;
 
 function makeBoard() {
   return Array.from({ length: BOARD_SIZE }, (_, r) => (
