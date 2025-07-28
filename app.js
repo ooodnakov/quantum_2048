@@ -1,11 +1,21 @@
+// Persistent configurable settings
+const DEFAULT_SETTINGS = {
+    boardSize: 6,
+    startingCrystals: 3,
+    quantumBonusChance: 0.3,
+    maxMoveHistory: 3
+};
+
+let settings = { ...DEFAULT_SETTINGS };
+let BOARD_SIZE = settings.boardSize;
+
 // Game state
-const BOARD_SIZE = 6;
 
 let gameState = {
     board: [],
     score: 0,
     bestScore: 0,
-    crystals: 3,
+    crystals: settings.startingCrystals,
     gravity: 'south', // north, east, south, west
     moveHistory: [],
     gameActive: false
@@ -27,6 +37,36 @@ const TILE_COLORS = {
 
 // Cache for dynamically generated tile colors to keep TILE_COLORS immutable
 const GENERATED_COLORS = {};
+
+// Load settings from localStorage
+function loadSettings() {
+    const saved = localStorage.getItem('quantum2048_settings');
+    let loaded = {};
+    if (saved) {
+        try {
+            loaded = JSON.parse(saved);
+        } catch {
+            loaded = {};
+        }
+    }
+    Object.assign(settings, DEFAULT_SETTINGS, loaded);
+    BOARD_SIZE = settings.boardSize;
+}
+
+// Persist settings to localStorage
+function saveSettings() {
+    localStorage.setItem('quantum2048_settings', JSON.stringify(settings));
+}
+
+// Reset settings to defaults and persist
+function resetSettings() {
+    Object.assign(settings, DEFAULT_SETTINGS);
+    saveSettings();
+    BOARD_SIZE = settings.boardSize;
+}
+
+// Load persisted settings immediately
+loadSettings();
 
 // Generate a color for tiles beyond the predefined range
 function getTileColor(value) {
@@ -101,7 +141,7 @@ function initGame() {
     // Initialize empty board
     gameState.board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
     gameState.score = 0;
-    gameState.crystals = 3;
+    gameState.crystals = settings.startingCrystals;
     gameState.gravity = 'south';
     gameState.moveHistory = [];
     gameState.gameActive = true;
@@ -115,7 +155,6 @@ function initGame() {
 }
 
 // Start game
-// eslint-disable-next-line no-unused-vars
 function startGame() {
     document.getElementById('startScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
@@ -124,7 +163,6 @@ function startGame() {
 }
 
 // Show start screen
-// eslint-disable-next-line no-unused-vars
 function showStartScreen() {
     document.getElementById('gameOverScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.add('hidden');
@@ -132,7 +170,6 @@ function showStartScreen() {
 }
 
 // New game
-// eslint-disable-next-line no-unused-vars
 function newGame() {
     document.getElementById('gameOverScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
@@ -264,8 +301,8 @@ function saveGameState() {
     
     gameState.moveHistory.push(stateCopy);
     
-    // Keep only last 3 moves
-    if (gameState.moveHistory.length > 3) {
+    // Keep only last configured moves
+    if (gameState.moveHistory.length > settings.maxMoveHistory) {
         gameState.moveHistory.shift();
     }
 }
@@ -385,7 +422,7 @@ function processRow(row) {
             score += newRow[i];
             
             // Check for quantum bonus
-            if (Math.random() < 0.3) { // 30% chance for quantum bonus
+            if (Math.random() < settings.quantumBonusChance) {
                 score *= 2;
             }
             
@@ -509,6 +546,41 @@ function endGame() {
     achievementsDiv.innerHTML = `<p>Highest tile reached: <strong>${maxTile}</strong></p>`;
 }
 
+// ---- Settings Menu ----
+function populateSettingsInputs() {
+    document.getElementById('settingBoardSize').value = settings.boardSize;
+    document.getElementById('settingCrystals').value = settings.startingCrystals;
+    document.getElementById('settingQuantumChance').value = Math.round(settings.quantumBonusChance * 100);
+    document.getElementById('settingHistory').value = settings.maxMoveHistory;
+}
+
+function openSettings() {
+    populateSettingsInputs();
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('settingsScreen').classList.remove('hidden');
+}
+
+function closeSettings() {
+    document.getElementById('settingsScreen').classList.add('hidden');
+    document.getElementById('startScreen').classList.remove('hidden');
+}
+
+function saveSettingsFromMenu() {
+    settings.boardSize = parseInt(document.getElementById('settingBoardSize').value, 10);
+    settings.startingCrystals = parseInt(document.getElementById('settingCrystals').value, 10);
+    settings.quantumBonusChance = parseInt(document.getElementById('settingQuantumChance').value, 10) / 100;
+    settings.maxMoveHistory = parseInt(document.getElementById('settingHistory').value, 10);
+    saveSettings();
+    BOARD_SIZE = settings.boardSize;
+    closeSettings();
+    newGame();
+}
+
+function resetSettingsFromMenu() {
+    resetSettings();
+    populateSettingsInputs();
+}
+
 // Event listeners
 document.addEventListener('keydown', (e) => {
     if (!gameState.gameActive) return;
@@ -584,7 +656,36 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDisplay();
 });
 
+// Expose functions for the browser UI
+if (typeof window !== 'undefined') {
+    window.startGame = startGame;
+    window.showStartScreen = showStartScreen;
+    window.newGame = newGame;
+    window.rotateGravity = rotateGravity;
+    window.rewindTime = rewindTime;
+    window.openSettings = openSettings;
+    window.closeSettings = closeSettings;
+    window.saveSettingsFromMenu = saveSettingsFromMenu;
+    window.resetSettingsFromMenu = resetSettingsFromMenu;
+}
+
 // Export for testing environments
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { gameState, move, handleTouchStart, handleTouchMove, handleTouchEnd, getTileColor, formatNumber, TILE_COLORS, BOARD_SIZE, addRandomTile, getMaxTile };
+    module.exports = {
+        gameState,
+        move,
+        handleTouchStart,
+        handleTouchMove,
+        handleTouchEnd,
+        getTileColor,
+        formatNumber,
+        TILE_COLORS,
+        BOARD_SIZE,
+        addRandomTile,
+        getMaxTile,
+        loadSettings,
+        saveSettings,
+        resetSettings,
+        settings
+    };
 }
