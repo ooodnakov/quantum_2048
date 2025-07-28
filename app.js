@@ -12,7 +12,7 @@ let gameState = {
 // Game configuration
 const TILE_COLORS = {
     2: '#ff6b6b',
-    4: '#ffa726', 
+    4: '#ffa726',
     8: '#ffeb3b',
     16: '#66bb6a',
     32: '#42a5f5',
@@ -22,6 +22,36 @@ const TILE_COLORS = {
     512: 'gold',
     1024: 'platinum'
 };
+
+// Generate a color for tiles beyond the predefined range
+function getTileColor(value) {
+    if (TILE_COLORS[value]) return TILE_COLORS[value];
+
+    const index = Math.log2(value);
+    const hue = (index * 42) % 360; // Spread hues across the spectrum
+    const color = `hsl(${hue}, 70%, 60%)`;
+    TILE_COLORS[value] = color;
+    return color;
+}
+
+// Convert large numbers to abbreviated form (e.g. 10k, 1m)
+function formatNumber(num) {
+    if (num < 10000) return String(num);
+
+    const suffixes = ['k', 'm', 'b', 't', 'q'];
+    const exponent = Math.floor(Math.log10(num));
+    const index = Math.floor(exponent / 3) - 1; // -1 because 1k starts at 1e3
+
+    let suffix;
+    if (index < suffixes.length) {
+        suffix = suffixes[index];
+    } else {
+        suffix = String.fromCharCode('a'.charCodeAt(0) + index - suffixes.length);
+    }
+
+    const value = Math.floor(num / Math.pow(10, (index + 1) * 3));
+    return `${value}${suffix}`;
+}
 
 const GRAVITY_ARROWS = {
     north: '⬆️',
@@ -110,17 +140,23 @@ function addRandomTile() {
 function renderBoard() {
     const boardElement = document.getElementById('gameBoard');
     boardElement.innerHTML = '';
-    
+
     for (let r = 0; r < 4; r++) {
         for (let c = 0; c < 4; c++) {
             const tileElement = document.createElement('div');
             tileElement.className = 'tile';
-            
+
             const value = gameState.board[r][c];
             if (value > 0) {
-                tileElement.textContent = value;
+                tileElement.textContent = formatNumber(value);
                 tileElement.classList.add(`tile-${value}`);
-                
+                tileElement.style.backgroundColor = getTileColor(value);
+
+                // Ensure text is readable for generated colors
+                if (!TILE_COLORS[value]) {
+                    tileElement.style.color = '#fff';
+                }
+
                 // Check if this is a quantum tile
                 if (isQuantumTile(r, c)) {
                     tileElement.classList.add('quantum');

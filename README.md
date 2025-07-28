@@ -6,6 +6,8 @@ Quantum 2048: An Innovative 2048 Game with Multiple Creative Twists
 * Time Manipulation Mechanics - The game includes "time crystals" that allow players to rewind their last few moves when stuck. This addresses one of the main frustrations in traditional 2048 while adding a resource management element
 
 * Color Evolution System - through beautiful color stages (red→orange→yellow→green→blue→purple→pink→white), making the game more visually engaging and easier to track progression
+* Generative Colors - tiles beyond 1024 automatically get unique hues
+* Abbreviated Tile Values - numbers over 10,000 display as 10k, 1m, 1b and so on
 
 * Quantum Bonuses - When complementary colors merge (like red+green or blue+orange), they create special "quantum tiles" worth double points, adding an extra strategic layer that rewards color theory knowledge
 
