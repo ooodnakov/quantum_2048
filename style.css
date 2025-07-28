@@ -1002,13 +1002,19 @@ body {
 .tile.tile-1024 { background: platinum; color: #333; }
 
 .tile.quantum {
-    box-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.6);
-    animation: quantumPulse 2s infinite;
+    animation: quantumPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
 }
 
 @keyframes quantumPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.6);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(var(--color-primary-rgb), 0.9);
+    }
 }
 
 .tile.new-tile {
@@ -1016,8 +1022,20 @@ body {
 }
 
 @keyframes tileAppear {
-    0% { transform: scale(0); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    80% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .tile.merged {
@@ -1045,9 +1063,18 @@ body {
 }
 
 @keyframes tileMerge {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.25);
+    }
+    60% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 @keyframes moveLeft {
@@ -1310,3 +1337,15 @@ body {
 .game-screen.level-6 { background: linear-gradient(135deg, var(--color-bg-6), var(--color-bg-7)); }
 .game-screen.level-7 { background: linear-gradient(135deg, var(--color-bg-7), var(--color-bg-8)); }
 .game-screen.level-8 { background: linear-gradient(135deg, var(--color-bg-8), var(--color-bg-1)); }
+
+.game-board.wobble {
+    animation: gravity-wobble 0.5s cubic-bezier(.25,.8,.25,1);
+}
+
+@keyframes gravity-wobble {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+    75% { transform: rotate(-1deg); }
+    100% { transform: rotate(0deg); }
+}

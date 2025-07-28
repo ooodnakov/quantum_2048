@@ -316,6 +316,13 @@ function rotateGravity() {
         gravityArrow.style.transform = 'rotate(0deg)';
         updateDisplay();
     }, 150);
+
+    // Add wobble effect to the board
+    const boardElement = document.getElementById('gameBoard');
+    boardElement.classList.add('wobble');
+    setTimeout(() => {
+        boardElement.classList.remove('wobble');
+    }, 500);
 }
 
 // Save game state for rewind
