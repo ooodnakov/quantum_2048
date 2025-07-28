@@ -23,7 +23,7 @@ describe('touch swipe controls', () => {
     app.gameState.gameActive = true;
 
     app.gameState.board = Array.from({ length: app.settings.boardSize }, () => (
-      Array.from({ length: app.settings.boardSize }, () => ({ id: null, value: 0 }))
+      Array.from({ length: app.BOARDsettings.boardSize_SIZE }, () => ({ id: null, value: 0 }))
     ));
   });
 

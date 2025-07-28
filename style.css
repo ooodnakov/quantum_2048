@@ -1048,11 +1048,13 @@ body {
 
 @keyframes moveLeft {
     from { transform: translateX(100%); }
+
     to { transform: translateX(0); }
 }
 
 @keyframes moveRight {
     from { transform: translateX(-100%); }
+
     to { transform: translateX(0); }
 }
 

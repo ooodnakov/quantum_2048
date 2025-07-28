@@ -142,7 +142,8 @@ function initGame() {
     }
     
     // Initialize empty board
-    gameState.board = Array.from(settings.boardSize, () => (
+
+    gameState.board = Array.from({ length: settings.boardSize }, () => (
         Array.from({ length: BOARD_SIZE }, () => createTile())
     ));
     gameState.nextId = 1;
@@ -189,7 +190,6 @@ function addRandomTile() {
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
             if (gameState.board[r][c].value === 0) {
-
                 emptyCells.push({r, c});
             }
         }
@@ -268,7 +268,6 @@ function isQuantumTile(r, c) {
     for (let [nr, nc] of neighbors) {
         if (nr >= 0 && nr < settings.boardSize && nc >= 0 && nc < settings.boardSize) {
             const neighborValue = gameState.board[nr][nc].value;
-
             if (neighborValue > 0) {
                 const neighborColor = TILE_COLORS[neighborValue];
                 if (isComplementaryColor(color, neighborColor)) {
@@ -335,7 +334,7 @@ function saveGameState() {
 function rewindTime() {
     if (gameState.crystals > 0 && gameState.moveHistory.length > 0) {
         const previousState = gameState.moveHistory.pop();
-        gameState.board = previousState.board;
+        gameState.board = previousState.board.map(row => row.map(cell => ({ ...cell })));
         gameState.score = previousState.score;
         gameState.crystals = previousState.crystals - 1;
         
@@ -415,8 +414,8 @@ function transformBoard(board, direction, reverse = false) {
 
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
-            let newR, newC;
-
+            const { r: newR, c: newC } = transformCoord(r, c, direction, reverse);
+          
             if (direction === 'left') {
                 [newR, newC] = reverse ? [c, r] : [r, c];
             } else if (direction === 'right') {
@@ -426,7 +425,6 @@ function transformBoard(board, direction, reverse = false) {
             } else { // down
                 [newR, newC] = reverse ? [settings.boardSize - 1 - r, c] : [settings.boardSize - 1 - c, r];
             }
-            
             if (reverse) {
                 newBoard[newR][newC] = { ...board[r][c] };
             } else {
@@ -434,7 +432,7 @@ function transformBoard(board, direction, reverse = false) {
             }
         }
     }
-    
+
     return newBoard;
 }
 
@@ -732,6 +730,8 @@ if (typeof module !== 'undefined' && module.exports) {
         getTileColor,
         formatNumber,
         TILE_COLORS,
+        transformBoard,
+        transformCoord
         addRandomTile,
         getMaxTile,
         loadSettings,
