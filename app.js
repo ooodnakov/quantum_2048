@@ -391,18 +391,24 @@ function move(direction) {
     const mergePositions = mergePositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     const quantumPositions = quantumPositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     
+    const prevTilePositions = new Map();
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
+            const tile = previousBoard[r][c];
+            if (tile.id !== null) {
+                prevTilePositions.set(tile.id, { r, c });
+            }
+        }
+    }
+
     const movedPositions = [];
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
             const tile = gameState.board[r][c];
             if (tile.id !== null) {
-                for (let pr = 0; pr < settings.boardSize; pr++) {
-                    for (let pc = 0; pc < settings.boardSize; pc++) {
-                        const prevTile = previousBoard[pr][pc];
-                        if (prevTile.id === tile.id && (pr !== r || pc !== c)) {
-                            movedPositions.push({ r, c });
-                        }
-                    }
+                const prevPos = prevTilePositions.get(tile.id);
+                if (prevPos && (prevPos.r !== r || prevPos.c !== c)) {
+                    movedPositions.push({ r, c });
                 }
             }
         }
