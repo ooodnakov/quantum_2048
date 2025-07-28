@@ -213,6 +213,10 @@ function renderBoard(merged = [], moveDir = null, movedTiles = [], quantumTiles 
     boardElement.style.gridTemplateColumns = `repeat(${settings.boardSize}, 1fr)`;
     boardElement.style.gridTemplateRows = `repeat(${settings.boardSize}, 1fr)`;
 
+    const mergedSet = new Set(merged.map(pos => `${pos.r},${pos.c}`));
+    const quantumSet = new Set(quantumTiles.map(pos => `${pos.r},${pos.c}`));
+    const movedSet = new Set(movedTiles.map(pos => `${pos.r},${pos.c}`));
+
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
             const tileElement = document.createElement('div');
@@ -239,15 +243,15 @@ function renderBoard(merged = [], moveDir = null, movedTiles = [], quantumTiles 
                     tileElement.classList.add('new-tile');
                 }
 
-                if (merged.some(pos => pos.r === r && pos.c === c)) {
+                if (mergedSet.has(`${r},${c}`)) {
                     tileElement.classList.add('merged');
                 }
 
-                if (quantumTiles.some(pos => pos.r === r && pos.c === c)) {
+                if (quantumSet.has(`${r},${c}`)) {
                     tileElement.classList.add('quantum-jump');
                 }
 
-                if (moveDir && movedTiles.some(pos => pos.r === r && pos.c === c)) {
+                if (moveDir && movedSet.has(`${r},${c}`)) {
                     tileElement.classList.add(`move-${moveDir}`);
                 }
             }
@@ -398,18 +402,24 @@ function move(direction) {
     const mergePositions = mergePositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     const quantumPositions = quantumPositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     
+    const prevTilePositions = new Map();
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
+            const tile = previousBoard[r][c];
+            if (tile.id !== null) {
+                prevTilePositions.set(tile.id, { r, c });
+            }
+        }
+    }
+
     const movedPositions = [];
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
             const tile = gameState.board[r][c];
             if (tile.id !== null) {
-                for (let pr = 0; pr < settings.boardSize; pr++) {
-                    for (let pc = 0; pc < settings.boardSize; pc++) {
-                        const prevTile = previousBoard[pr][pc];
-                        if (prevTile.id === tile.id && (pr !== r || pc !== c)) {
-                            movedPositions.push({ r, c });
-                        }
-                    }
+                const prevPos = prevTilePositions.get(tile.id);
+                if (prevPos && (prevPos.r !== r || prevPos.c !== c)) {
+                    movedPositions.push({ r, c });
                 }
             }
         }
@@ -661,7 +671,6 @@ function saveSettingsFromMenu() {
 
     saveSettings();
     closeSettings();
-    newGame();
 }
 
 function resetSettingsFromMenu() {
