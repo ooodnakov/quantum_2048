@@ -945,8 +945,6 @@ body {
 
 .game-board {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, 1fr);
     gap: var(--space-8);
     background: var(--color-surface);
     padding: var(--space-16);
