@@ -1,11 +1,20 @@
+// Persistent configurable settings
+const DEFAULT_SETTINGS = {
+    boardSize: 6,
+    startingCrystals: 3,
+    quantumBonusChance: 0.3,
+    maxMoveHistory: 3
+};
+
+let settings = { ...DEFAULT_SETTINGS };
+
 // Game state
-const BOARD_SIZE = 6;
 
 let gameState = {
     board: [],
     score: 0,
     bestScore: 0,
-    crystals: 3,
+    crystals: settings.startingCrystals,
     gravity: 'south', // north, east, south, west
     moveHistory: [],
     gameActive: false,
@@ -29,6 +38,34 @@ const TILE_COLORS = {
 
 // Cache for dynamically generated tile colors to keep TILE_COLORS immutable
 const GENERATED_COLORS = {};
+
+// Load settings from localStorage
+function loadSettings() {
+    const saved = localStorage.getItem('quantum2048_settings');
+    let loaded = {};
+    if (saved) {
+        try {
+            loaded = JSON.parse(saved);
+        } catch {
+            loaded = {};
+        }
+    }
+    Object.assign(settings, DEFAULT_SETTINGS, loaded);
+}
+
+// Persist settings to localStorage
+function saveSettings() {
+    localStorage.setItem('quantum2048_settings', JSON.stringify(settings));
+}
+
+// Reset settings to defaults and persist
+function resetSettings() {
+    Object.assign(settings, DEFAULT_SETTINGS);
+    saveSettings();
+}
+
+// Load persisted settings immediately
+loadSettings();
 
 // Generate a color for tiles beyond the predefined range
 function getTileColor(value) {
@@ -64,8 +101,8 @@ function formatNumber(num) {
 // Find the highest tile on the board without flattening the array
 function getMaxTile(board) {
     let max = 0;
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
             if (board[r][c].value > max) max = board[r][c].value;
         }
     }
@@ -105,13 +142,14 @@ function initGame() {
     }
     
     // Initialize empty board
-    gameState.board = Array.from({ length: BOARD_SIZE }, () => (
+
+    gameState.board = Array.from({ length: settings.boardSize }, () => (
         Array.from({ length: BOARD_SIZE }, () => createTile())
     ));
     gameState.nextId = 1;
     gameState.lastAdded = null;
     gameState.score = 0;
-    gameState.crystals = 3;
+    gameState.crystals = settings.startingCrystals;
     gameState.gravity = 'south';
     gameState.moveHistory = [];
     gameState.gameActive = true;
@@ -125,7 +163,6 @@ function initGame() {
 }
 
 // Start game
-// eslint-disable-next-line no-unused-vars
 function startGame() {
     document.getElementById('startScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
@@ -134,7 +171,6 @@ function startGame() {
 }
 
 // Show start screen
-// eslint-disable-next-line no-unused-vars
 function showStartScreen() {
     document.getElementById('gameOverScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.add('hidden');
@@ -142,7 +178,6 @@ function showStartScreen() {
 }
 
 // New game
-// eslint-disable-next-line no-unused-vars
 function newGame() {
     document.getElementById('gameOverScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
@@ -152,8 +187,8 @@ function newGame() {
 // Add random tile
 function addRandomTile() {
     const emptyCells = [];
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
             if (gameState.board[r][c].value === 0) {
                 emptyCells.push({r, c});
             }
@@ -175,11 +210,11 @@ function addRandomTile() {
 function renderBoard(merged = [], moveDir = null) {
     const boardElement = document.getElementById('gameBoard');
     boardElement.innerHTML = '';
-    boardElement.style.gridTemplateColumns = `repeat(${BOARD_SIZE}, 1fr)`;
-    boardElement.style.gridTemplateRows = `repeat(${BOARD_SIZE}, 1fr)`;
+    boardElement.style.gridTemplateColumns = `repeat(${settings.boardSize}, 1fr)`;
+    boardElement.style.gridTemplateRows = `repeat(${settings.boardSize}, 1fr)`;
 
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
             const tileElement = document.createElement('div');
             tileElement.className = 'tile';
 
@@ -231,7 +266,7 @@ function isQuantumTile(r, c) {
     ];
     
     for (let [nr, nc] of neighbors) {
-        if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+        if (nr >= 0 && nr < settings.boardSize && nc >= 0 && nc < settings.boardSize) {
             const neighborValue = gameState.board[nr][nc].value;
             if (neighborValue > 0) {
                 const neighborColor = TILE_COLORS[neighborValue];
@@ -289,8 +324,8 @@ function saveGameState() {
     
     gameState.moveHistory.push(stateCopy);
     
-    // Keep only last 3 moves
-    if (gameState.moveHistory.length > 3) {
+    // Keep only last configured moves
+    if (gameState.moveHistory.length > settings.maxMoveHistory) {
         gameState.moveHistory.shift();
     }
 }
@@ -335,7 +370,7 @@ function move(direction) {
     let workingBoard = transformBoard(newBoard, direction);
     
     // Process each row
-    for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let r = 0; r < settings.boardSize; r++) {
         const row = workingBoard[r];
         const newRow = processRow(row);
         workingBoard[r] = newRow.row;
@@ -373,14 +408,23 @@ function move(direction) {
 
 // Transform board for different move directions
 function transformBoard(board, direction, reverse = false) {
-    const newBoard = Array.from({ length: BOARD_SIZE }, () => (
-        Array.from({ length: BOARD_SIZE }, () => createTile())
+    const newBoard = Array.from({ length: settings.boardSize }, () => (
+        Array.from({ length: settings.boardSize }, () => createTile())
     ));
 
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
             const { r: newR, c: newC } = transformCoord(r, c, direction, reverse);
-
+          
+            if (direction === 'left') {
+                [newR, newC] = reverse ? [c, r] : [r, c];
+            } else if (direction === 'right') {
+                [newR, newC] = reverse ? [c, settings.boardSize - 1 - r] : [r, settings.boardSize - 1 - c];
+            } else if (direction === 'up') {
+                [newR, newC] = reverse ? [r, c] : [c, r];
+            } else { // down
+                [newR, newC] = reverse ? [settings.boardSize - 1 - r, c] : [settings.boardSize - 1 - c, r];
+            }
             if (reverse) {
                 newBoard[newR][newC] = { ...board[r][c] };
             } else {
@@ -420,7 +464,7 @@ function processRow(row) {
             score += newRow[i].value;
             
             // Check for quantum bonus
-            if (Math.random() < 0.3) { // 30% chance for quantum bonus
+            if (Math.random() < settings.quantumBonusChance) {
                 score *= 2;
             }
 
@@ -431,7 +475,7 @@ function processRow(row) {
     }
 
     // Fill the rest with zeros
-    while (newRow.length < BOARD_SIZE) {
+    while (newRow.length < settings.boardSize) {
         newRow.push(createTile());
     }
 
@@ -510,22 +554,22 @@ function createParticleEffect(type) {
 // Check if game is over
 function isGameOver() {
     // Check for empty cells
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
             if (gameState.board[r][c].value === 0) return false;
         }
     }
     
     // Check for possible merges
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
             const current = gameState.board[r][c].value;
 
             // Check right neighbor
-            if (c < BOARD_SIZE - 1 && current === gameState.board[r][c + 1].value) return false;
+            if (c < settings.boardSize - 1 && current === gameState.board[r][c + 1].value) return false;
 
             // Check bottom neighbor
-            if (r < BOARD_SIZE - 1 && current === gameState.board[r + 1][c].value) return false;
+            if (r < settings.boardSize - 1 && current === gameState.board[r + 1][c].value) return false;
         }
     }
     
@@ -543,6 +587,48 @@ function endGame() {
     const achievementsDiv = document.getElementById('achievements');
     const maxTile = getMaxTile(gameState.board);
     achievementsDiv.innerHTML = `<p>Highest tile reached: <strong>${maxTile}</strong></p>`;
+}
+
+// ---- Settings Menu ----
+function populateSettingsInputs() {
+    document.getElementById('settingBoardSize').value = settings.boardSize;
+    document.getElementById('settingCrystals').value = settings.startingCrystals;
+    document.getElementById('settingQuantumChance').value = Math.round(settings.quantumBonusChance * 100);
+    document.getElementById('settingHistory').value = settings.maxMoveHistory;
+}
+
+function openSettings() {
+    populateSettingsInputs();
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('settingsScreen').classList.remove('hidden');
+}
+
+function closeSettings() {
+    document.getElementById('settingsScreen').classList.add('hidden');
+    document.getElementById('startScreen').classList.remove('hidden');
+}
+
+function saveSettingsFromMenu() {
+    const boardSize = parseInt(document.getElementById('settingBoardSize').value, 10);
+    if (!Number.isNaN(boardSize)) settings.boardSize = boardSize;
+
+    const startingCrystals = parseInt(document.getElementById('settingCrystals').value, 10);
+    if (!Number.isNaN(startingCrystals)) settings.startingCrystals = startingCrystals;
+
+    const quantumBonusChance = parseInt(document.getElementById('settingQuantumChance').value, 10);
+    if (!Number.isNaN(quantumBonusChance)) settings.quantumBonusChance = quantumBonusChance / 100;
+
+    const maxMoveHistory = parseInt(document.getElementById('settingHistory').value, 10);
+    if (!Number.isNaN(maxMoveHistory)) settings.maxMoveHistory = maxMoveHistory;
+
+    saveSettings();
+    closeSettings();
+    newGame();
+}
+
+function resetSettingsFromMenu() {
+    resetSettings();
+    populateSettingsInputs();
 }
 
 // Event listeners
@@ -620,6 +706,19 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDisplay();
 });
 
+// Expose functions for the browser UI
+if (typeof window !== 'undefined') {
+    window.startGame = startGame;
+    window.showStartScreen = showStartScreen;
+    window.newGame = newGame;
+    window.rotateGravity = rotateGravity;
+    window.rewindTime = rewindTime;
+    window.openSettings = openSettings;
+    window.closeSettings = closeSettings;
+    window.saveSettingsFromMenu = saveSettingsFromMenu;
+    window.resetSettingsFromMenu = resetSettingsFromMenu;
+}
+
 // Export for testing environments
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -631,10 +730,14 @@ if (typeof module !== 'undefined' && module.exports) {
         getTileColor,
         formatNumber,
         TILE_COLORS,
-        BOARD_SIZE,
-        addRandomTile,
-        getMaxTile,
         transformBoard,
         transformCoord
+        addRandomTile,
+        getMaxTile,
+        loadSettings,
+        saveSettings,
+        saveSettingsFromMenu,
+        resetSettings,
+        settings
     };
 }
