@@ -468,24 +468,20 @@ let touchStartX = 0;
 let touchStartY = 0;
 
 function handleTouchStart(e) {
-    if (gameState.gameActive) {
-        e.preventDefault();
-    }
+    if (!gameState.gameActive) return;
+    e.preventDefault();
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
 }
 
 function handleTouchMove(e) {
-    if (gameState.gameActive) {
-        e.preventDefault();
-    }
+    if (!gameState.gameActive) return;
+    e.preventDefault();
 }
 
 function handleTouchEnd(e) {
-    if (gameState.gameActive) {
-        e.preventDefault();
-    }
-    if (!gameState.gameActive) return;
+    if (!gameState.gameActive) return null;
+    e.preventDefault();
     
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;

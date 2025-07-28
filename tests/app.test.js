@@ -20,15 +20,18 @@ function setupDom() {
 
 describe('touch swipe controls', () => {
   let app;
-  beforeEach(() => {
+  beforeAll(() => {
     setupDom();
     app = require('../app.js');
+  });
+
+  beforeEach(() => {
     app.gameState.gameActive = true;
     app.gameState.board = Array(4).fill(null).map(() => Array(4).fill(0));
   });
 
   afterEach(() => {
-    jest.resetModules();
+    jest.clearAllMocks();
   });
 
   test('swipe right triggers move right', () => {
