@@ -17,7 +17,9 @@ let gameState = {
     crystals: settings.startingCrystals,
     gravity: 'south', // north, east, south, west
     moveHistory: [],
-    gameActive: false
+    gameActive: false,
+    nextId: 1,
+    lastAdded: null
 };
 
 // Game configuration
@@ -101,7 +103,7 @@ function getMaxTile(board) {
     let max = 0;
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
-            if (board[r][c] > max) max = board[r][c];
+            if (board[r][c].value > max) max = board[r][c].value;
         }
     }
     return max;
@@ -126,6 +128,10 @@ const ACHIEVEMENTS = [
     {tile: 512, crystals_reward: 3}
 ];
 
+function createTile(value = 0) {
+    return { id: value === 0 ? null : gameState.nextId++, value };
+}
+
 // Initialize game
 function initGame() {
     // Load best score from localStorage if available
@@ -136,7 +142,11 @@ function initGame() {
     }
     
     // Initialize empty board
-    gameState.board = Array(settings.boardSize).fill().map(() => Array(settings.boardSize).fill(0));
+    gameState.board = Array.from(settings.boardSize, () => (
+        Array.from({ length: BOARD_SIZE }, () => createTile())
+    ));
+    gameState.nextId = 1;
+    gameState.lastAdded = null;
     gameState.score = 0;
     gameState.crystals = settings.startingCrystals;
     gameState.gravity = 'south';
@@ -178,7 +188,8 @@ function addRandomTile() {
     const emptyCells = [];
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
-            if (gameState.board[r][c] === 0) {
+            if (gameState.board[r][c].value === 0) {
+
                 emptyCells.push({r, c});
             }
         }
@@ -190,12 +201,13 @@ function addRandomTile() {
         const maxPower = Math.log2(maxTile);
         const exponentOffset = 3 + Math.floor(Math.random() * 3); // between 3 and 5 below max
         const newExponent = Math.max(1, Math.floor(maxPower) - exponentOffset);
-        gameState.board[randomCell.r][randomCell.c] = 2 ** newExponent;
+        gameState.board[randomCell.r][randomCell.c] = createTile(2 ** newExponent);
+        gameState.lastAdded = { r: randomCell.r, c: randomCell.c };
     }
 }
 
 // Render board
-function renderBoard() {
+function renderBoard(merged = [], moveDir = null) {
     const boardElement = document.getElementById('gameBoard');
     boardElement.innerHTML = '';
     boardElement.style.gridTemplateColumns = `repeat(${settings.boardSize}, 1fr)`;
@@ -206,7 +218,7 @@ function renderBoard() {
             const tileElement = document.createElement('div');
             tileElement.className = 'tile';
 
-            const value = gameState.board[r][c];
+            const value = gameState.board[r][c].value;
             if (value > 0) {
                 tileElement.textContent = formatNumber(value);
                 tileElement.classList.add(`tile-${value}`);
@@ -222,16 +234,30 @@ function renderBoard() {
                 if (isQuantumTile(r, c)) {
                     tileElement.classList.add('quantum');
                 }
+
+                if (gameState.lastAdded && gameState.lastAdded.r === r && gameState.lastAdded.c === c) {
+                    tileElement.classList.add('new-tile');
+                }
+
+                if (merged.some(pos => pos.r === r && pos.c === c)) {
+                    tileElement.classList.add('merged');
+                }
+
+                if (moveDir) {
+                    tileElement.classList.add(`move-${moveDir}`);
+                }
             }
             
             boardElement.appendChild(tileElement);
         }
     }
+
+    gameState.lastAdded = null;
 }
 
 // Check if tile is quantum (has complementary neighbors)
 function isQuantumTile(r, c) {
-    const value = gameState.board[r][c];
+    const value = gameState.board[r][c].value;
     if (value === 0) return false;
     
     const color = TILE_COLORS[value];
@@ -241,7 +267,8 @@ function isQuantumTile(r, c) {
     
     for (let [nr, nc] of neighbors) {
         if (nr >= 0 && nr < settings.boardSize && nc >= 0 && nc < settings.boardSize) {
-            const neighborValue = gameState.board[nr][nc];
+            const neighborValue = gameState.board[nr][nc].value;
+
             if (neighborValue > 0) {
                 const neighborColor = TILE_COLORS[neighborValue];
                 if (isComplementaryColor(color, neighborColor)) {
@@ -291,7 +318,7 @@ function rotateGravity() {
 // Save game state for rewind
 function saveGameState() {
     const stateCopy = {
-        board: gameState.board.map(row => [...row]),
+        board: gameState.board.map(row => row.map(cell => ({ ...cell }))),
         score: gameState.score,
         crystals: gameState.crystals
     };
@@ -337,7 +364,8 @@ function move(direction) {
     saveGameState();
     let moved = false;
     let scoreGained = 0;
-    const newBoard = gameState.board.map(row => [...row]);
+    const newBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
+    const mergePositionsTransformed = [];
     
     // Transform board based on direction for easier processing
     let workingBoard = transformBoard(newBoard, direction);
@@ -349,10 +377,12 @@ function move(direction) {
         workingBoard[r] = newRow.row;
         scoreGained += newRow.score;
         if (newRow.moved) moved = true;
+        newRow.merges.forEach(idx => mergePositionsTransformed.push({ r, c: idx }));
     }
     
     // Transform back
     gameState.board = transformBoard(workingBoard, direction, true);
+    const mergePositions = mergePositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     
     if (moved) {
         gameState.score += scoreGained;
@@ -365,7 +395,7 @@ function move(direction) {
         
         addRandomTile();
         updateDisplay();
-        renderBoard();
+        renderBoard(mergePositions, direction);
         updateBackgroundLevel();
         checkAchievements();
         createParticleEffect('merge');
@@ -379,7 +409,9 @@ function move(direction) {
 
 // Transform board for different move directions
 function transformBoard(board, direction, reverse = false) {
-    const newBoard = Array(settings.boardSize).fill().map(() => Array(settings.boardSize).fill(0));
+    const newBoard = Array.from({ length: settings.boardSize }, () => (
+        Array.from({ length: settings.boardSize }, () => createTile())
+    ));
 
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
@@ -396,9 +428,9 @@ function transformBoard(board, direction, reverse = false) {
             }
             
             if (reverse) {
-                newBoard[newR][newC] = board[r][c];
+                newBoard[newR][newC] = { ...board[r][c] };
             } else {
-                newBoard[r][c] = board[newR][newC];
+                newBoard[r][c] = { ...board[newR][newC] };
             }
         }
     }
@@ -406,34 +438,50 @@ function transformBoard(board, direction, reverse = false) {
     return newBoard;
 }
 
+function transformCoord(r, c, direction, reverse = false) {
+    let newR, newC;
+    if (direction === 'left') {
+        [newR, newC] = reverse ? [c, r] : [r, c];
+    } else if (direction === 'right') {
+        [newR, newC] = reverse ? [c, BOARD_SIZE - 1 - r] : [r, BOARD_SIZE - 1 - c];
+    } else if (direction === 'up') {
+        [newR, newC] = reverse ? [r, c] : [c, r];
+    } else {
+        [newR, newC] = reverse ? [BOARD_SIZE - 1 - r, c] : [BOARD_SIZE - 1 - c, r];
+    }
+    return { r: newR, c: newC };
+}
+
 // Process a single row (merge tiles to the left)
 function processRow(row) {
-    const newRow = row.filter(val => val !== 0);
+    const newRow = row.filter(tile => tile.value !== 0);
     let score = 0;
-    let moved = row.some((val, i) => val !== newRow[i] || (val === 0 && newRow[i] !== undefined));
+    let moved = row.some((tile, i) => tile.value !== (newRow[i] ? newRow[i].value : 0));
+    const merges = [];
     
     // Merge adjacent equal tiles
     for (let i = 0; i < newRow.length - 1; i++) {
-        if (newRow[i] === newRow[i + 1]) {
-            newRow[i] *= 2;
-            score += newRow[i];
+        if (newRow[i].value === newRow[i + 1].value) {
+            newRow[i] = { ...newRow[i], value: newRow[i].value * 2 };
+            score += newRow[i].value;
             
             // Check for quantum bonus
             if (Math.random() < settings.quantumBonusChance) {
                 score *= 2;
             }
-            
+
             newRow.splice(i + 1, 1);
+            merges.push(i);
             moved = true;
         }
     }
-    
+
     // Fill the rest with zeros
     while (newRow.length < settings.boardSize) {
-        newRow.push(0);
+        newRow.push(createTile());
     }
-    
-    return { row: newRow, score, moved };
+
+    return { row: newRow, score, moved, merges };
 }
 
 // Check achievements
@@ -510,20 +558,20 @@ function isGameOver() {
     // Check for empty cells
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
-            if (gameState.board[r][c] === 0) return false;
+            if (gameState.board[r][c].value === 0) return false;
         }
     }
     
     // Check for possible merges
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
-            const current = gameState.board[r][c];
+            const current = gameState.board[r][c].value;
 
             // Check right neighbor
-            if (c < settings.boardSize - 1 && current === gameState.board[r][c + 1]) return false;
+            if (c < settings.boardSize - 1 && current === gameState.board[r][c + 1].value) return false;
 
             // Check bottom neighbor
-            if (r < settings.boardSize - 1 && current === gameState.board[r + 1][c]) return false;
+            if (r < settings.boardSize - 1 && current === gameState.board[r + 1][c].value) return false;
         }
     }
     
