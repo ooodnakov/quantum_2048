@@ -654,7 +654,6 @@ function saveSettingsFromMenu() {
 
     saveSettings();
     closeSettings();
-    newGame();
 }
 
 function resetSettingsFromMenu() {
