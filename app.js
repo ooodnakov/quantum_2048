@@ -299,7 +299,7 @@ function saveGameState() {
 function rewindTime() {
     if (gameState.crystals > 0 && gameState.moveHistory.length > 0) {
         const previousState = gameState.moveHistory.pop();
-        gameState.board = previousState.board.map(row => row.map(cell => ({ ...cell })));
+        gameState.board = previousState.board;
         gameState.score = previousState.score;
         gameState.crystals = previousState.crystals - 1;
         
