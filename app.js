@@ -23,14 +23,18 @@ const TILE_COLORS = {
     1024: 'platinum'
 };
 
+// Cache for dynamically generated tile colors to keep TILE_COLORS immutable
+const GENERATED_COLORS = {};
+
 // Generate a color for tiles beyond the predefined range
 function getTileColor(value) {
     if (TILE_COLORS[value]) return TILE_COLORS[value];
+    if (GENERATED_COLORS[value]) return GENERATED_COLORS[value];
 
     const index = Math.log2(value);
     const hue = (index * 42) % 360; // Spread hues across the spectrum
     const color = `hsl(${hue}, 70%, 60%)`;
-    TILE_COLORS[value] = color;
+    GENERATED_COLORS[value] = color;
     return color;
 }
 
@@ -46,7 +50,7 @@ function formatNumber(num) {
     if (index < suffixes.length) {
         suffix = suffixes[index];
     } else {
-        suffix = String.fromCharCode('a'.charCodeAt(0) + index - suffixes.length);
+        suffix = String.fromCharCode('a'.charCodeAt(0) + Math.min(index - suffixes.length, 25));
     }
 
     const value = Math.floor(num / Math.pow(10, (index + 1) * 3));
@@ -98,6 +102,7 @@ function initGame() {
 }
 
 // Start game
+// eslint-disable-next-line no-unused-vars
 function startGame() {
     document.getElementById('startScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
@@ -106,6 +111,7 @@ function startGame() {
 }
 
 // Show start screen
+// eslint-disable-next-line no-unused-vars
 function showStartScreen() {
     document.getElementById('gameOverScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.add('hidden');
@@ -113,6 +119,7 @@ function showStartScreen() {
 }
 
 // New game
+// eslint-disable-next-line no-unused-vars
 function newGame() {
     document.getElementById('gameOverScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
@@ -150,10 +157,11 @@ function renderBoard() {
             if (value > 0) {
                 tileElement.textContent = formatNumber(value);
                 tileElement.classList.add(`tile-${value}`);
+                const isPredefinedColor = Object.prototype.hasOwnProperty.call(TILE_COLORS, value);
                 tileElement.style.backgroundColor = getTileColor(value);
 
                 // Ensure text is readable for generated colors
-                if (!TILE_COLORS[value]) {
+                if (!isPredefinedColor) {
                     tileElement.style.color = '#fff';
                 }
 
@@ -542,3 +550,8 @@ document.addEventListener('touchend', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     updateDisplay();
 });
+
+// Export functions for testing in Node environment
+if (typeof module !== 'undefined') {
+    module.exports = { getTileColor, formatNumber, TILE_COLORS };
+}
