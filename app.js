@@ -1,4 +1,6 @@
 // Game state
+const BOARD_SIZE = 6;
+
 let gameState = {
     board: [],
     score: 0,
@@ -86,7 +88,7 @@ function initGame() {
     }
     
     // Initialize empty board
-    gameState.board = Array(4).fill().map(() => Array(4).fill(0));
+    gameState.board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
     gameState.score = 0;
     gameState.crystals = 3;
     gameState.gravity = 'south';
@@ -129,8 +131,8 @@ function newGame() {
 // Add random tile
 function addRandomTile() {
     const emptyCells = [];
-    for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
             if (gameState.board[r][c] === 0) {
                 emptyCells.push({r, c});
             }
@@ -139,7 +141,11 @@ function addRandomTile() {
     
     if (emptyCells.length > 0) {
         const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-        gameState.board[randomCell.r][randomCell.c] = Math.random() < 0.9 ? 2 : 4;
+        const maxTile = Math.max(2, ...gameState.board.flat());
+        const maxPower = Math.log2(maxTile);
+        const exponentOffset = 3 + Math.floor(Math.random() * 3); // between 3 and 5 below max
+        const newExponent = Math.max(1, Math.floor(maxPower) - exponentOffset);
+        gameState.board[randomCell.r][randomCell.c] = 2 ** newExponent;
     }
 }
 
@@ -147,9 +153,11 @@ function addRandomTile() {
 function renderBoard() {
     const boardElement = document.getElementById('gameBoard');
     boardElement.innerHTML = '';
+    boardElement.style.gridTemplateColumns = `repeat(${BOARD_SIZE}, 1fr)`;
+    boardElement.style.gridTemplateRows = `repeat(${BOARD_SIZE}, 1fr)`;
 
-    for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
             const tileElement = document.createElement('div');
             tileElement.className = 'tile';
 
@@ -187,7 +195,7 @@ function isQuantumTile(r, c) {
     ];
     
     for (let [nr, nc] of neighbors) {
-        if (nr >= 0 && nr < 4 && nc >= 0 && nc < 4) {
+        if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
             const neighborValue = gameState.board[nr][nc];
             if (neighborValue > 0) {
                 const neighborColor = TILE_COLORS[neighborValue];
@@ -290,7 +298,7 @@ function move(direction) {
     let workingBoard = transformBoard(newBoard, direction);
     
     // Process each row
-    for (let r = 0; r < 4; r++) {
+    for (let r = 0; r < BOARD_SIZE; r++) {
         const row = workingBoard[r];
         const newRow = processRow(row);
         workingBoard[r] = newRow.row;
@@ -326,20 +334,20 @@ function move(direction) {
 
 // Transform board for different move directions
 function transformBoard(board, direction, reverse = false) {
-    const newBoard = Array(4).fill().map(() => Array(4).fill(0));
-    
-    for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
+    const newBoard = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
             let newR, newC;
-            
+
             if (direction === 'left') {
                 [newR, newC] = reverse ? [c, r] : [r, c];
             } else if (direction === 'right') {
-                [newR, newC] = reverse ? [c, 3-r] : [r, 3-c];
+                [newR, newC] = reverse ? [c, BOARD_SIZE - 1 - r] : [r, BOARD_SIZE - 1 - c];
             } else if (direction === 'up') {
                 [newR, newC] = reverse ? [r, c] : [c, r];
             } else { // down
-                [newR, newC] = reverse ? [3-r, c] : [3-c, r];
+                [newR, newC] = reverse ? [BOARD_SIZE - 1 - r, c] : [BOARD_SIZE - 1 - c, r];
             }
             
             if (reverse) {
@@ -376,7 +384,7 @@ function processRow(row) {
     }
     
     // Fill the rest with zeros
-    while (newRow.length < 4) {
+    while (newRow.length < BOARD_SIZE) {
         newRow.push(0);
     }
     
@@ -455,22 +463,22 @@ function createParticleEffect(type) {
 // Check if game is over
 function isGameOver() {
     // Check for empty cells
-    for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
             if (gameState.board[r][c] === 0) return false;
         }
     }
     
     // Check for possible merges
-    for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
             const current = gameState.board[r][c];
-            
+
             // Check right neighbor
-            if (c < 3 && current === gameState.board[r][c + 1]) return false;
-            
+            if (c < BOARD_SIZE - 1 && current === gameState.board[r][c + 1]) return false;
+
             // Check bottom neighbor
-            if (r < 3 && current === gameState.board[r + 1][c]) return false;
+            if (r < BOARD_SIZE - 1 && current === gameState.board[r + 1][c]) return false;
         }
     }
     
@@ -567,5 +575,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for testing environments
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { gameState, move, handleTouchStart, handleTouchMove, handleTouchEnd, getTileColor, formatNumber, TILE_COLORS};
+    module.exports = { gameState, move, handleTouchStart, handleTouchMove, handleTouchEnd, getTileColor, formatNumber, TILE_COLORS, BOARD_SIZE};
 }
