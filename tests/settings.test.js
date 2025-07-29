@@ -9,28 +9,34 @@ describe('settings persistence', () => {
     const { settings: s } = require('../app.js');
     expect(s.boardSize).toBe(6);
     expect(s.startingCrystals).toBe(3);
+    expect(s.startingTiles).toBe(2);
   });
 
   test('saves and reloads custom settings', () => {
     let app = require('../app.js');
     app.settings.boardSize = 7;
+    app.settings.startingTiles = 4;
     app.saveSettings();
     jest.resetModules();
     app = require('../app.js');
     expect(app.settings.boardSize).toBe(7);
+    expect(app.settings.startingTiles).toBe(4);
   });
 
   test('resetSettings restores defaults', () => {
     let app = require('../app.js');
     app.settings.boardSize = 8;
+    app.settings.startingTiles = 5;
     app.resetSettings();
     expect(app.settings.boardSize).toBe(6);
+    expect(app.settings.startingTiles).toBe(2);
   });
 
   test('invalid menu values do not change settings', () => {
     document.body.innerHTML = `
       <input id="settingBoardSize" value="abc">
       <input id="settingCrystals" value="xyz">
+      <input id="settingStartTiles" value="foo">
       <input id="settingQuantumChance" value="--">
       <input id="settingHistory" value="NaN">
       <div id="score"></div>
@@ -55,6 +61,7 @@ describe('settings persistence', () => {
     document.body.innerHTML = `
       <input id="settingBoardSize" value="6">
       <input id="settingCrystals" value="3">
+      <input id="settingStartTiles" value="2">
       <input id="settingQuantumChance" value="10">
       <input id="settingHistory" value="5">
       <div id="score"></div>
@@ -93,6 +100,7 @@ describe('settings persistence', () => {
     let app = require('../app.js');
     app.settings.boardSize = 5;
     app.settings.startingCrystals = 2;
+    app.settings.startingTiles = 3;
     app.saveSettings();
 
     jest.resetModules();
@@ -115,6 +123,8 @@ describe('settings persistence', () => {
     expect(app.gameState.board.length).toBe(5);
     expect(app.gameState.board[0].length).toBe(5);
     expect(app.gameState.crystals).toBe(2);
+    const count = app.gameState.board.flat().filter(t => t.value > 0).length;
+    expect(count).toBe(3);
   });
 
   test('reset settings affects subsequent games', () => {
@@ -135,10 +145,13 @@ describe('settings persistence', () => {
     const app = require('../app.js');
     app.settings.boardSize = 7;
     app.settings.startingCrystals = 5;
+    app.settings.startingTiles = 4;
     app.resetSettings();
     app.startGame();
 
     expect(app.gameState.board.length).toBe(6);
     expect(app.gameState.crystals).toBe(3);
+    const count = app.gameState.board.flat().filter(t => t.value > 0).length;
+    expect(count).toBe(2);
   });
 });

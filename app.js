@@ -2,6 +2,7 @@
 const DEFAULT_SETTINGS = {
     boardSize: 6,
     startingCrystals: 3,
+    startingTiles: 2,
     quantumBonusChance: 0.3,
     maxMoveHistory: 3
 };
@@ -164,8 +165,8 @@ function initGame() {
     gameState.moveHistory = [];
     gameState.gameActive = true;
     
-    // Add initial tiles based on board size
-    addRandomTiles(getTilesPerStep(settings.boardSize));
+    // Add initial tiles based on configured startingTiles setting
+    addRandomTiles(settings.startingTiles);
     
     updateDisplay();
     renderBoard();
@@ -763,6 +764,7 @@ function endGame() {
 function populateSettingsInputs() {
     document.getElementById('settingBoardSize').value = settings.boardSize;
     document.getElementById('settingCrystals').value = settings.startingCrystals;
+    document.getElementById('settingStartTiles').value = settings.startingTiles;
     document.getElementById('settingQuantumChance').value = Math.round(settings.quantumBonusChance * 100);
     document.getElementById('settingHistory').value = settings.maxMoveHistory;
 }
@@ -784,6 +786,9 @@ function saveSettingsFromMenu() {
 
     const startingCrystals = parseInt(document.getElementById('settingCrystals').value, 10);
     if (!Number.isNaN(startingCrystals)) settings.startingCrystals = startingCrystals;
+
+    const startingTiles = parseInt(document.getElementById('settingStartTiles').value, 10);
+    if (!Number.isNaN(startingTiles)) settings.startingTiles = startingTiles;
 
     const quantumBonusChance = parseInt(document.getElementById('settingQuantumChance').value, 10);
     if (!Number.isNaN(quantumBonusChance)) settings.quantumBonusChance = quantumBonusChance / 100;
