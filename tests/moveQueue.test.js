@@ -32,12 +32,7 @@ afterEach(() => {
 test('queued moves execute after current move', () => {
   // Place single tile at end of row
   gameState.board[0][5] = { id: 1, value: 2 };
-  jest
-    .spyOn(Math, 'random')
-    .mockReturnValueOnce(0) // spawn at (0,1) after first move
-    .mockReturnValueOnce(0)
-    .mockReturnValueOnce(0) // spawn after second move
-    .mockReturnValueOnce(0);
+  jest.spyOn(Math, 'random').mockReturnValue(0);
 
   move('left');
   // This call should be queued because first move is in progress

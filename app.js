@@ -135,10 +135,11 @@ function createTile(value = 0) {
     return { id: value === 0 ? null : gameState.nextId++, value };
 }
 
-// Determine initial crystal count based on board size
-function getInitialCrystals(boardSize) {
+// Determine how many tiles should spawn at game start and after each move
+// based on the board size. At minimum one tile will appear.
+function getTilesPerStep(boardSize) {
     const sizeBased = Math.floor(boardSize / 2) - 1;
-    return Math.max(settings.startingCrystals, sizeBased);
+    return Math.max(1, sizeBased);
 }
 
 // Initialize game
@@ -158,14 +159,13 @@ function initGame() {
     gameState.nextId = 1;
     gameState.lastAdded = null;
     gameState.score = 0;
-    gameState.crystals = getInitialCrystals(settings.boardSize);
+    gameState.crystals = settings.startingCrystals;
     gameState.gravity = 'south';
     gameState.moveHistory = [];
     gameState.gameActive = true;
     
-    // Add initial tiles
-    addRandomTile();
-    addRandomTile();
+    // Add initial tiles based on board size
+    addRandomTiles(getTilesPerStep(settings.boardSize));
     
     updateDisplay();
     renderBoard();
@@ -212,6 +212,13 @@ function addRandomTile() {
         const newExponent = Math.max(1, Math.floor(maxPower) - exponentOffset);
         gameState.board[randomCell.r][randomCell.c] = createTile(2 ** newExponent);
         gameState.lastAdded = { r: randomCell.r, c: randomCell.c };
+    }
+}
+
+// Spawn multiple random tiles
+function addRandomTiles(count) {
+    for (let i = 0; i < count; i++) {
+        addRandomTile();
     }
 }
 
@@ -520,7 +527,7 @@ function move(direction) {
         // Disable input during the animation to avoid inconsistencies.
         gameState.gameActive = false;
         setTimeout(() => {
-            addRandomTile();
+            addRandomTiles(getTilesPerStep(settings.boardSize));
             renderBoard();
             updateBackgroundLevel();
             checkAchievements();
@@ -895,6 +902,7 @@ if (typeof module !== 'undefined' && module.exports) {
         transformBoard,
         transformCoord,
         addRandomTile,
+        addRandomTiles,
         getMaxTile,
         loadSettings,
         saveSettings,
@@ -902,7 +910,7 @@ if (typeof module !== 'undefined' && module.exports) {
         resetSettings,
         settings,
         processRow,
-        getInitialCrystals,
+        getTilesPerStep,
         moveQueue,
         saveGameState,
         rewindTime,

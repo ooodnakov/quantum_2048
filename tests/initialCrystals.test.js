@@ -26,14 +26,8 @@ describe('initial crystal spawn', () => {
     settings.boardSize = originalBoardSize;
   });
 
-  test('larger boards grant additional crystals', () => {
+  test('initGame uses starting crystals regardless of board size', () => {
     settings.boardSize = 10;
-    initGame();
-    expect(gameState.crystals).toBe(4);
-  });
-
-  test('smaller boards use starting crystals', () => {
-    settings.boardSize = 4;
     initGame();
     expect(gameState.crystals).toBe(settings.startingCrystals);
   });
