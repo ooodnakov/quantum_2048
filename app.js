@@ -20,7 +20,10 @@ let gameState = {
     moveHistory: [],
     gameActive: false,
     nextId: 1,
-    lastAdded: null
+    lastAdded: null,
+    gravityRandomizeNext: false,
+    echoPairs: new Map(),
+    clearRowFlag: false
 };
 
 // Queue for storing pending move directions when a move is already in progress
@@ -132,8 +135,42 @@ const ACHIEVEMENTS = [
     {tile: 512, crystals_reward: 3}
 ];
 
-function createTile(value = 0) {
-    return { id: value === 0 ? null : gameState.nextId++, value };
+function createTile(value = 0, type = 'normal', extra = {}) {
+    return { id: value === 0 ? null : gameState.nextId++, value, type, ...extra };
+}
+
+function getPhaseCycle() {
+    return 3 + Math.floor(Math.random() * 3);
+}
+
+function spawnPhaseShiftTile(r, c, value) {
+    const tile = createTile(value, 'phase', { phaseCounter: getPhaseCycle(), phased: false });
+    gameState.board[r][c] = tile;
+}
+
+function spawnEchoDuplicateTile(r, c, value) {
+    const tile = createTile(value, 'echo');
+    gameState.board[r][c] = tile;
+
+    const emptyCells = [];
+    for (let rr = 0; rr < settings.boardSize; rr++) {
+        for (let cc = 0; cc < settings.boardSize; cc++) {
+            if (gameState.board[rr][cc].value === 0) {
+                emptyCells.push({ r: rr, c: cc });
+            }
+        }
+    }
+    if (emptyCells.length > 0) {
+        const spot = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        const copy = createTile(value, 'echo');
+        gameState.board[spot.r][spot.c] = copy;
+        gameState.echoPairs.set(tile.id, { copyId: copy.id, copyPos: spot, turnsLeft: 4 });
+    }
+}
+
+function spawnNexusPortalTile(r, c, value) {
+    const tile = createTile(value, 'portal');
+    gameState.board[r][c] = tile;
 }
 
 // Determine how many tiles should spawn at game start and after each move
@@ -456,6 +493,14 @@ function getMoveDirection(key) {
 
 // Move tiles
 function move(direction) {
+    if (gameState.gravityRandomizeNext) {
+        const dirs = ['north', 'east', 'south', 'west'];
+        gameState.gravity = dirs[Math.floor(Math.random() * dirs.length)];
+        gameState.gravityRandomizeNext = false;
+    }
+
+    updateEchoPairs();
+
     if (!gameState.gameActive) {
         moveQueue.push(direction);
         return;
@@ -470,6 +515,7 @@ function move(direction) {
     const mergePositionsTransformed = [];
     const mergesByRow = Array.from({ length: settings.boardSize }, () => []);
     const quantumPositionsTransformed = [];
+    const removedEchoIds = [];
     
     // Transform board based on direction for easier processing
     let workingBoard = transformBoard(newBoard, direction);
@@ -477,17 +523,29 @@ function move(direction) {
     // Process each row
     for (let r = 0; r < settings.boardSize; r++) {
         const row = workingBoard[r];
-        const newRow = processRow(row);
-        workingBoard[r] = newRow.row;
-        scoreGained += newRow.score;
-        if (newRow.moved) moved = true;
-        mergesByRow[r] = newRow.merges.slice();
-        newRow.merges.forEach(idx => mergePositionsTransformed.push({ r, c: idx }));
-        newRow.quantumJumps.forEach(idx => quantumPositionsTransformed.push({ r, c: idx }));
+        const result = processRow(row);
+        workingBoard[r] = result.row;
+        scoreGained += result.score;
+        if (result.moved) moved = true;
+        mergesByRow[r] = result.merges.slice();
+        result.merges.forEach(idx => mergePositionsTransformed.push({ r, c: idx }));
+        result.quantumJumps.forEach(idx => quantumPositionsTransformed.push({ r, c: idx }));
+        if (result.removedEchoId) removedEchoIds.push(result.removedEchoId);
     }
     
     // Transform back
     gameState.board = transformBoard(workingBoard, direction, true);
+
+    // Remove any echo duplicates that were merged
+    for (const id of removedEchoIds) {
+        const pair = gameState.echoPairs.get(id);
+        if (pair) {
+            const { r, c } = pair.copyPos;
+            gameState.board[r][c] = createTile();
+            gameState.echoPairs.delete(id);
+            gameState.crystals += 1;
+        }
+    }
     const mergePositions = mergePositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     const quantumPositions = quantumPositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     
@@ -556,6 +614,10 @@ function move(direction) {
         gameState.gameActive = false;
         setTimeout(() => {
             addRandomTiles(getTilesPerStep(settings.boardSize));
+            if (gameState.clearRowFlag) {
+                clearRandomRow();
+                gameState.clearRowFlag = false;
+            }
             renderBoard();
             updateBackgroundLevel();
             checkAchievements();
@@ -638,16 +700,19 @@ function getSecondTileIndices(row) {
 
 // Process a single row (merge tiles to the left)
 function processRow(row) {
-    const newRow = row.filter(tile => tile.value !== 0);
+    const newRow = row.filter(tile => tile.value !== 0 || tile.type === 'portal');
     let score = 0;
     let moved = row.some((tile, i) => tile.value !== (newRow[i] ? newRow[i].value : 0));
     const merges = [];
     const quantumJumps = [];
+    let removedEchoId = null;
     
     // Merge adjacent equal tiles
     for (let i = 0; i < newRow.length - 1; i++) {
         if (newRow[i].value === newRow[i + 1].value) {
-            newRow[i] = { ...newRow[i], value: newRow[i].value * 2 };
+            const left = newRow[i];
+            const right = newRow[i + 1];
+            newRow[i] = { ...left, value: left.value * 2, type: 'normal' };
             let gained = newRow[i].value;
             let quantum = false;
 
@@ -655,6 +720,22 @@ function processRow(row) {
             if (Math.random() < settings.quantumBonusChance) {
                 gained *= 2;
                 quantum = true;
+            }
+
+            if (left.type === 'phase' || right.type === 'phase') {
+                gameState.gravityRandomizeNext = true;
+            }
+
+            // Echo duplicate handling
+            for (const [origId, pair] of gameState.echoPairs.entries()) {
+                if ([left.id, right.id].includes(origId) || [left.id, right.id].includes(pair.copyId)) {
+                    removedEchoId = origId;
+                    break;
+                }
+            }
+
+            if (left.type === 'portal' && right.type === 'portal') {
+                gameState.clearRowFlag = true;
             }
 
             score += gained;
@@ -665,12 +746,24 @@ function processRow(row) {
         }
     }
 
+    // Portal teleportation
+    for (let i = newRow.length - 2; i >= 0; i--) {
+        if (newRow[i].type === 'portal' && newRow[i + 1].type !== 'portal') {
+            const tele = newRow.splice(i + 1, 1)[0];
+            while (newRow.length < settings.boardSize - 1) {
+                newRow.push(createTile());
+            }
+            newRow.push(tele);
+            moved = true;
+        }
+    }
+
     // Fill the rest with zeros
     while (newRow.length < settings.boardSize) {
         newRow.push(createTile());
     }
 
-    return { row: newRow, score, moved, merges, quantumJumps };
+    return { row: newRow, score, moved, merges, quantumJumps, removedEchoId };
 }
 
 // Check achievements
@@ -746,6 +839,25 @@ function createParticleEffect(type) {
                 container.removeChild(particle);
             }
         }, 1000);
+    }
+}
+
+function updateEchoPairs() {
+    for (const [origId, pair] of gameState.echoPairs.entries()) {
+        pair.turnsLeft -= 1;
+        if (pair.turnsLeft <= 0) {
+            const { r, c } = pair.copyPos;
+            gameState.board[r][c] = createTile();
+            gameState.echoPairs.delete(origId);
+            gameState.score = Math.max(0, gameState.score - 10);
+        }
+    }
+}
+
+function clearRandomRow() {
+    const row = Math.floor(Math.random() * settings.boardSize);
+    for (let c = 0; c < settings.boardSize; c++) {
+        gameState.board[row][c] = createTile();
     }
 }
 
@@ -954,6 +1066,9 @@ if (typeof module !== 'undefined' && module.exports) {
         startGame,
         newGame,
         initGame,
-        renderBoard
+        renderBoard,
+        spawnPhaseShiftTile,
+        spawnEchoDuplicateTile,
+        spawnNexusPortalTile
     };
 }
