@@ -19,6 +19,16 @@ In particular, swipe gestures on touch screens allow smooth play on phones and t
 
 The innovative combination of physics manipulation, temporal mechanics, and visual evolution creates a familiar yet fresh experience that maintains the addictive core of 2048 while offering entirely new strategic possibilities. Players must now consider not just tile positioning, but also gravity direction, time management, and color harmony - transforming a simple sliding puzzle into a multi-dimensional strategic challenge.
 
+## Experimental Block Types
+
+The design also introduces several advanced tile behaviors:
+
+* **Phase Shift Block** – Randomly phases in and out of existence every few turns. When intangible, other tiles can move through it. Merging while active scrambles gravity for the next move.
+* **Echo Duplicate Block** – Spawns with a temporary "echo" copy elsewhere on the board. Merging with either instance grants a time crystal and removes the echo; ignoring it causes the copy to fade and deduct points.
+* **Nexus Portal Block** – Functions as a wormhole, teleporting tiles that slide into it to the opposite side. Linking two portals through a merge can trigger chain reactions, but excessive use may purge a random row.
+
+These experimental blocks push the traditional mechanics into new territory, encouraging daring strategies and careful timing.
+
 
 ## Continuous Integration
 This project uses GitHub Actions to run ESLint and Jest on every push and pull request.

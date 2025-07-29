@@ -19,7 +19,10 @@ let gameState = {
     moveHistory: [],
     gameActive: false,
     nextId: 1,
-    lastAdded: null
+    lastAdded: null,
+    gravityRandomizeNext: false,
+    echoPairs: new Map(),
+    clearRowFlag: false
 };
 
 // Queue for storing pending move directions when a move is already in progress
@@ -131,8 +134,42 @@ const ACHIEVEMENTS = [
     {tile: 512, crystals_reward: 3}
 ];
 
-function createTile(value = 0) {
-    return { id: value === 0 ? null : gameState.nextId++, value };
+function createTile(value = 0, type = 'normal', extra = {}) {
+    return { id: value === 0 ? null : gameState.nextId++, value, type, ...extra };
+}
+
+function getPhaseCycle() {
+    return 3 + Math.floor(Math.random() * 3);
+}
+
+function spawnPhaseShiftTile(r, c, value) {
+    const tile = createTile(value, 'phase', { phaseCounter: getPhaseCycle(), phased: false });
+    gameState.board[r][c] = tile;
+}
+
+function spawnEchoDuplicateTile(r, c, value) {
+    const tile = createTile(value, 'echo');
+    gameState.board[r][c] = tile;
+
+    const emptyCells = [];
+    for (let rr = 0; rr < settings.boardSize; rr++) {
+        for (let cc = 0; cc < settings.boardSize; cc++) {
+            if (gameState.board[rr][cc].value === 0 && rr !== r && cc !== c) {
+                emptyCells.push({ r: rr, c: cc });
+            }
+        }
+    }
+    if (emptyCells.length > 0) {
+        const spot = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        const copy = createTile(value, 'echo');
+        gameState.board[spot.r][spot.c] = copy;
+        gameState.echoPairs.set(tile.id, { copyId: copy.id, copyPos: spot, turnsLeft: 4 });
+    }
+}
+
+function spawnNexusPortalTile(r, c, value) {
+    const tile = createTile(value, 'portal');
+    gameState.board[r][c] = tile;
 }
 
 // Determine how many tiles should spawn at game start and after each move
@@ -428,6 +465,14 @@ function getMoveDirection(key) {
 
 // Move tiles
 function move(direction) {
+    if (gameState.gravityRandomizeNext) {
+        const dirs = ['north', 'east', 'south', 'west'];
+        gameState.gravity = dirs[Math.floor(Math.random() * dirs.length)];
+        gameState.gravityRandomizeNext = false;
+    }
+
+    updateEchoPairs();
+
     if (!gameState.gameActive) {
         moveQueue.push(direction);
         return;
@@ -528,6 +573,10 @@ function move(direction) {
         gameState.gameActive = false;
         setTimeout(() => {
             addRandomTiles(getTilesPerStep(settings.boardSize));
+            if (gameState.clearRowFlag) {
+                clearRandomRow();
+                gameState.clearRowFlag = false;
+            }
             renderBoard();
             updateBackgroundLevel();
             checkAchievements();
@@ -610,7 +659,7 @@ function getSecondTileIndices(row) {
 
 // Process a single row (merge tiles to the left)
 function processRow(row) {
-    const newRow = row.filter(tile => tile.value !== 0);
+    const newRow = row.filter(tile => tile.value !== 0 || tile.type === 'portal');
     let score = 0;
     let moved = row.some((tile, i) => tile.value !== (newRow[i] ? newRow[i].value : 0));
     const merges = [];
@@ -619,7 +668,9 @@ function processRow(row) {
     // Merge adjacent equal tiles
     for (let i = 0; i < newRow.length - 1; i++) {
         if (newRow[i].value === newRow[i + 1].value) {
-            newRow[i] = { ...newRow[i], value: newRow[i].value * 2 };
+            const left = newRow[i];
+            const right = newRow[i + 1];
+            newRow[i] = { ...left, value: left.value * 2, type: 'normal' };
             let gained = newRow[i].value;
             let quantum = false;
 
@@ -629,10 +680,41 @@ function processRow(row) {
                 quantum = true;
             }
 
+            if (left.type === 'phase' || right.type === 'phase') {
+                gameState.gravityRandomizeNext = true;
+            }
+
+            // Echo duplicate handling
+            for (const [origId, pair] of gameState.echoPairs.entries()) {
+                if ([left.id, right.id].includes(origId) || [left.id, right.id].includes(pair.copyId)) {
+                    const { r, c } = pair.copyPos;
+                    gameState.board[r][c] = createTile();
+                    gameState.echoPairs.delete(origId);
+                    gameState.crystals += 1;
+                    break;
+                }
+            }
+
+            if (left.type === 'portal' && right.type === 'portal') {
+                gameState.clearRowFlag = true;
+            }
+
             score += gained;
             newRow.splice(i + 1, 1);
             merges.push(i);
             if (quantum) quantumJumps.push(i);
+            moved = true;
+        }
+    }
+
+    // Portal teleportation
+    for (let i = 0; i < newRow.length - 1; i++) {
+        if (newRow[i].type === 'portal' && newRow[i + 1].type !== 'portal') {
+            const tele = newRow.splice(i + 1, 1)[0];
+            while (newRow.length < settings.boardSize - 1) {
+                newRow.push(createTile());
+            }
+            newRow.push(tele);
             moved = true;
         }
     }
@@ -718,6 +800,25 @@ function createParticleEffect(type) {
                 container.removeChild(particle);
             }
         }, 1000);
+    }
+}
+
+function updateEchoPairs() {
+    for (const [origId, pair] of gameState.echoPairs.entries()) {
+        pair.turnsLeft -= 1;
+        if (pair.turnsLeft <= 0) {
+            const { r, c } = pair.copyPos;
+            gameState.board[r][c] = createTile();
+            gameState.echoPairs.delete(origId);
+            gameState.score = Math.max(0, gameState.score - 10);
+        }
+    }
+}
+
+function clearRandomRow() {
+    const row = Math.floor(Math.random() * settings.boardSize);
+    for (let c = 0; c < settings.boardSize; c++) {
+        gameState.board[row][c] = createTile();
     }
 }
 
@@ -917,6 +1018,9 @@ if (typeof module !== 'undefined' && module.exports) {
         startGame,
         newGame,
         initGame,
-        renderBoard
+        renderBoard,
+        spawnPhaseShiftTile,
+        spawnEchoDuplicateTile,
+        spawnNexusPortalTile
     };
 }
