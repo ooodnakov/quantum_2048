@@ -434,9 +434,11 @@ function move(direction) {
             localStorage.setItem('quantum2048_best', gameState.bestScore.toString());
         }
         
-        addRandomTile();
         updateDisplay();
         renderBoard(mergePositions, direction, movedPositions, quantumPositions);
+
+        addRandomTile();
+        renderBoard();
         updateBackgroundLevel();
         checkAchievements();
         if (quantumPositions.length > 0) {
@@ -444,7 +446,7 @@ function move(direction) {
         } else {
             createParticleEffect('merge');
         }
-        
+
         // Check game over
         if (isGameOver()) {
             setTimeout(endGame, 500);
