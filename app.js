@@ -2,6 +2,7 @@
 const DEFAULT_SETTINGS = {
     boardSize: 6,
     startingCrystals: 3,
+    startingTiles: 2,
     quantumBonusChance: 0.3,
     maxMoveHistory: 3
 };
@@ -164,8 +165,9 @@ function initGame() {
     gameState.moveHistory = [];
     gameState.gameActive = true;
     
-    // Add initial tiles based on board size
-    addRandomTiles(getTilesPerStep(settings.boardSize));
+    // Add initial tiles based on configured startingTiles setting
+    // Each starting tile increases in value
+    addProgressiveTiles(settings.startingTiles);
     
     updateDisplay();
     renderBoard();
@@ -219,6 +221,32 @@ function addRandomTile() {
 function addRandomTiles(count) {
     for (let i = 0; i < count; i++) {
         addRandomTile();
+    }
+}
+
+// Add a tile with a specific value
+function addTileWithValue(value) {
+    const emptyCells = [];
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
+            if (gameState.board[r][c].value === 0) {
+                emptyCells.push({ r, c });
+            }
+        }
+    }
+
+    if (emptyCells.length > 0) {
+        const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        gameState.board[randomCell.r][randomCell.c] = createTile(value);
+        gameState.lastAdded = { r: randomCell.r, c: randomCell.c };
+    }
+}
+
+// Spawn starting tiles with progressively larger values
+function addProgressiveTiles(count) {
+    const toSpawn = Math.min(count, settings.boardSize * settings.boardSize);
+    for (let i = 0; i < toSpawn; i++) {
+        addTileWithValue(2 ** (i + 1));
     }
 }
 
@@ -763,6 +791,7 @@ function endGame() {
 function populateSettingsInputs() {
     document.getElementById('settingBoardSize').value = settings.boardSize;
     document.getElementById('settingCrystals').value = settings.startingCrystals;
+    document.getElementById('settingStartTiles').value = settings.startingTiles;
     document.getElementById('settingQuantumChance').value = Math.round(settings.quantumBonusChance * 100);
     document.getElementById('settingHistory').value = settings.maxMoveHistory;
 }
@@ -784,6 +813,12 @@ function saveSettingsFromMenu() {
 
     const startingCrystals = parseInt(document.getElementById('settingCrystals').value, 10);
     if (!Number.isNaN(startingCrystals)) settings.startingCrystals = startingCrystals;
+
+    const startingTiles = parseInt(document.getElementById('settingStartTiles').value, 10);
+    if (!Number.isNaN(startingTiles)) {
+        const maxTiles = settings.boardSize * settings.boardSize;
+        settings.startingTiles = Math.max(1, Math.min(startingTiles, maxTiles));
+    }
 
     const quantumBonusChance = parseInt(document.getElementById('settingQuantumChance').value, 10);
     if (!Number.isNaN(quantumBonusChance)) settings.quantumBonusChance = quantumBonusChance / 100;
@@ -903,6 +938,8 @@ if (typeof module !== 'undefined' && module.exports) {
         transformCoord,
         addRandomTile,
         addRandomTiles,
+        addTileWithValue,
+        addProgressiveTiles,
         getMaxTile,
         loadSettings,
         saveSettings,
