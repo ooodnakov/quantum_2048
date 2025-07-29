@@ -22,6 +22,9 @@ let gameState = {
     lastAdded: null
 };
 
+// Queue for storing pending move directions when a move is already in progress
+const moveQueue = [];
+
 // Game configuration
 const TILE_COLORS = {
     2: '#ff6b6b',
@@ -376,7 +379,10 @@ function getMoveDirection(key) {
 
 // Move tiles
 function move(direction) {
-    if (!gameState.gameActive) return;
+    if (!gameState.gameActive) {
+        moveQueue.push(direction);
+        return;
+    }
 
     saveGameState();
     const previousBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
@@ -488,8 +494,16 @@ function move(direction) {
                 setTimeout(endGame, 500);
             } else {
                 gameState.gameActive = true;
+                if (moveQueue.length > 0) {
+                    const next = moveQueue.shift();
+                    move(next);
+                }
             }
         }, 250); // Match animation duration from CSS (--duration-normal)
+    } else if (moveQueue.length > 0) {
+        // No tiles moved, process any queued moves immediately
+        const next = moveQueue.shift();
+        move(next);
     }
 }
 
@@ -846,6 +860,7 @@ if (typeof module !== 'undefined' && module.exports) {
         resetSettings,
         settings,
         processRow,
-        renderBoard
+        renderBoard,
+        moveQueue
     };
 }
