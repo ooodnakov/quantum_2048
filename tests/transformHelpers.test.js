@@ -37,4 +37,11 @@ describe('transform helpers', () => {
     expect(valuesOnly(result)).toEqual(valuesOnly(manual));
   });
 
+  test.each(directions)('round trip transform %s returns original board', dir => {
+    const board = makeBoard();
+    const transformed = transformBoard(board, dir);
+    const roundTripped = transformBoard(transformed, dir, true);
+    expect(valuesOnly(roundTripped)).toEqual(valuesOnly(board));
+  });
+
 });
