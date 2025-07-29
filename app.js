@@ -4,7 +4,10 @@ const DEFAULT_SETTINGS = {
     startingCrystals: 3,
     startingTiles: 2,
     quantumBonusChance: 0.3,
-    maxMoveHistory: 3
+    maxMoveHistory: 3,
+    phaseShiftSpawnChance: 0.02,
+    echoDuplicateSpawnChance: 0.02,
+    nexusPortalSpawnChance: 0.02
 };
 
 let settings = { ...DEFAULT_SETTINGS };
@@ -249,7 +252,23 @@ function addRandomTile() {
         const maxPower = Math.log2(maxTile);
         const exponentOffset = 3 + Math.floor(Math.random() * 3); // between 3 and 5 below max
         const newExponent = Math.max(1, Math.floor(maxPower) - exponentOffset);
-        gameState.board[randomCell.r][randomCell.c] = createTile(2 ** newExponent);
+        const value = 2 ** newExponent;
+
+        const rand = Math.random();
+        if (rand < settings.phaseShiftSpawnChance) {
+            spawnPhaseShiftTile(randomCell.r, randomCell.c, value);
+        } else if (rand < settings.phaseShiftSpawnChance + settings.echoDuplicateSpawnChance) {
+            spawnEchoDuplicateTile(randomCell.r, randomCell.c, value);
+        } else if (
+            rand <
+            settings.phaseShiftSpawnChance +
+                settings.echoDuplicateSpawnChance +
+                settings.nexusPortalSpawnChance
+        ) {
+            spawnNexusPortalTile(randomCell.r, randomCell.c, value);
+        } else {
+            gameState.board[randomCell.r][randomCell.c] = createTile(value);
+        }
         gameState.lastAdded = { r: randomCell.r, c: randomCell.c };
     }
 }
@@ -905,6 +924,12 @@ function populateSettingsInputs() {
     document.getElementById('settingCrystals').value = settings.startingCrystals;
     document.getElementById('settingStartTiles').value = settings.startingTiles;
     document.getElementById('settingQuantumChance').value = Math.round(settings.quantumBonusChance * 100);
+    const phaseEl = document.getElementById('settingPhaseSpawn');
+    if (phaseEl) phaseEl.value = Math.round(settings.phaseShiftSpawnChance * 100);
+    const echoEl = document.getElementById('settingEchoSpawn');
+    if (echoEl) echoEl.value = Math.round(settings.echoDuplicateSpawnChance * 100);
+    const nexusEl = document.getElementById('settingNexusSpawn');
+    if (nexusEl) nexusEl.value = Math.round(settings.nexusPortalSpawnChance * 100);
     document.getElementById('settingHistory').value = settings.maxMoveHistory;
 }
 
@@ -934,6 +959,24 @@ function saveSettingsFromMenu() {
 
     const quantumBonusChance = parseInt(document.getElementById('settingQuantumChance').value, 10);
     if (!Number.isNaN(quantumBonusChance)) settings.quantumBonusChance = quantumBonusChance / 100;
+
+    const phaseEl = document.getElementById('settingPhaseSpawn');
+    if (phaseEl) {
+        const phaseChance = parseInt(phaseEl.value, 10);
+        if (!Number.isNaN(phaseChance)) settings.phaseShiftSpawnChance = phaseChance / 100;
+    }
+
+    const echoEl = document.getElementById('settingEchoSpawn');
+    if (echoEl) {
+        const echoChance = parseInt(echoEl.value, 10);
+        if (!Number.isNaN(echoChance)) settings.echoDuplicateSpawnChance = echoChance / 100;
+    }
+
+    const nexusEl = document.getElementById('settingNexusSpawn');
+    if (nexusEl) {
+        const nexusChance = parseInt(nexusEl.value, 10);
+        if (!Number.isNaN(nexusChance)) settings.nexusPortalSpawnChance = nexusChance / 100;
+    }
 
     const maxMoveHistory = parseInt(document.getElementById('settingHistory').value, 10);
     if (!Number.isNaN(maxMoveHistory)) settings.maxMoveHistory = maxMoveHistory;
