@@ -34,4 +34,34 @@ describe('movement animation', () => {
     expect(firstTile.style.getPropertyValue('--dx')).toBe('3');
     expect(firstTile.style.getPropertyValue('--dy')).toBe('0');
   });
+
+  test('merged tile animates from second tile', () => {
+    gameState.board[0][0] = { id: 1, value: 2 };
+    gameState.board[0][1] = { id: 2, value: 2 };
+    move('left');
+    const tile = document.getElementById('gameBoard').children[0];
+    expect(tile.classList.contains('move')).toBe(true);
+    expect(tile.style.getPropertyValue('--dx')).toBe('1');
+  });
+
+  test('merge with gap uses correct source tile', () => {
+    gameState.board[0][0] = { id: 1, value: 2 };
+    gameState.board[0][2] = { id: 2, value: 2 };
+    move('left');
+    const tile = document.getElementById('gameBoard').children[0];
+    expect(tile.classList.contains('move')).toBe(true);
+    expect(tile.style.getPropertyValue('--dx')).toBe('2');
+  });
+
+  test('multiple merges calculate proper sources', () => {
+    gameState.board[0][0] = { id: 1, value: 2 };
+    gameState.board[0][1] = { id: 2, value: 2 };
+    gameState.board[0][2] = { id: 3, value: 4 };
+    gameState.board[0][3] = { id: 4, value: 4 };
+    move('left');
+    const boardEl = document.getElementById('gameBoard');
+    const secondTile = boardEl.children[1];
+    expect(secondTile.classList.contains('move')).toBe(true);
+    expect(secondTile.style.getPropertyValue('--dx')).toBe('2');
+  });
 });

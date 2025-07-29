@@ -385,6 +385,7 @@ function move(direction) {
     let scoreGained = 0;
     const newBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
     const mergePositionsTransformed = [];
+    const mergesByRow = Array.from({ length: settings.boardSize }, () => []);
     const quantumPositionsTransformed = [];
     
     // Transform board based on direction for easier processing
@@ -397,6 +398,7 @@ function move(direction) {
         workingBoard[r] = newRow.row;
         scoreGained += newRow.score;
         if (newRow.moved) moved = true;
+        mergesByRow[r] = newRow.merges.slice();
         newRow.merges.forEach(idx => mergePositionsTransformed.push({ r, c: idx }));
         newRow.quantumJumps.forEach(idx => quantumPositionsTransformed.push({ r, c: idx }));
     }
@@ -434,27 +436,22 @@ function move(direction) {
         }
     }
 
-    // Calculate merge movement from second tile
-    for (const pos of mergePositionsTransformed) {
-        const target = transformCoord(pos.r, pos.c, direction, true);
-        let count = 0;
-        let sourceIndex = pos.c;
-        for (let j = pos.c; j < settings.boardSize; j++) {
-            if (prevWorkingBoard[pos.r][j].value !== 0) {
-                count++;
-                if (count === 2) {
-                    sourceIndex = j;
-                    break;
-                }
-            }
+    // Calculate merge movement from second tile using previous board data
+    for (let r = 0; r < settings.boardSize; r++) {
+        const secondIndices = getSecondTileIndices(prevWorkingBoard[r]);
+        for (let i = 0; i < mergesByRow[r].length; i++) {
+            const targetIndex = mergesByRow[r][i];
+            const sourceIndex = secondIndices[i];
+            if (sourceIndex === undefined) continue;
+            const target = transformCoord(r, targetIndex, direction, true);
+            const source = transformCoord(r, sourceIndex, direction, true);
+            movedMap.set(`${target.r},${target.c}`, {
+                r: target.r,
+                c: target.c,
+                dr: source.r - target.r,
+                dc: source.c - target.c
+            });
         }
-        const source = transformCoord(pos.r, sourceIndex, direction, true);
-        movedMap.set(`${target.r},${target.c}`, {
-            r: target.r,
-            c: target.c,
-            dr: source.r - target.r,
-            dc: source.c - target.c
-        });
     }
 
     const movedPositions = Array.from(movedMap.values());
@@ -518,6 +515,24 @@ function transformCoord(r, c, direction) {
         [newR, newC] = [settings.boardSize - 1 - c, r];
     }
     return { r: newR, c: newC };
+}
+
+function getSecondTileIndices(row) {
+    const nonZero = [];
+    for (let i = 0; i < row.length; i++) {
+        if (row[i].value !== 0) nonZero.push(i);
+    }
+    const result = [];
+    let i = 0;
+    while (i < nonZero.length) {
+        if (i < nonZero.length - 1 && row[nonZero[i]].value === row[nonZero[i + 1]].value) {
+            result.push(nonZero[i + 1]);
+            i += 2;
+        } else {
+            i += 1;
+        }
+    }
+    return result;
 }
 
 // Process a single row (merge tiles to the left)
