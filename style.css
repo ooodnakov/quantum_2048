@@ -1061,20 +1061,8 @@ body {
     animation: quantumJump var(--duration-normal) var(--ease-standard);
 }
 
-.tile.move-left {
-    animation: moveLeft var(--duration-normal) var(--ease-standard);
-}
-
-.tile.move-right {
-    animation: moveRight var(--duration-normal) var(--ease-standard);
-}
-
-.tile.move-up {
-    animation: moveUp var(--duration-normal) var(--ease-standard);
-}
-
-.tile.move-down {
-    animation: moveDown var(--duration-normal) var(--ease-standard);
+.tile.move {
+    animation: moveTile var(--duration-normal) var(--ease-standard);
 }
 
 @keyframes tileMerge {
@@ -1092,26 +1080,14 @@ body {
     }
 }
 
-@keyframes moveLeft {
-    from { transform: translateX(100%); }
-
-    to { transform: translateX(0); }
-}
-
-@keyframes moveRight {
-    from { transform: translateX(-100%); }
-
-    to { transform: translateX(0); }
-}
-
-@keyframes moveUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-}
-
-@keyframes moveDown {
-    from { transform: translateY(-100%); }
-    to { transform: translateY(0); }
+@keyframes moveTile {
+    from {
+        transform: translate(
+            calc(var(--dx, 0) * 100%),
+            calc(var(--dy, 0) * 100%)
+        );
+    }
+    to { transform: translate(0, 0); }
 }
 
 @keyframes quantumJump {

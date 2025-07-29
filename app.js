@@ -207,7 +207,7 @@ function addRandomTile() {
 }
 
 // Render board
-function renderBoard(merged = [], moveDir = null, movedTiles = [], quantumTiles = []) {
+function renderBoard(merged = [], movedTiles = [], quantumTiles = []) {
     const boardElement = document.getElementById('gameBoard');
     boardElement.innerHTML = '';
     boardElement.style.gridTemplateColumns = `repeat(${settings.boardSize}, 1fr)`;
@@ -215,7 +215,7 @@ function renderBoard(merged = [], moveDir = null, movedTiles = [], quantumTiles 
 
     const mergedSet = new Set(merged.map(pos => `${pos.r},${pos.c}`));
     const quantumSet = new Set(quantumTiles.map(pos => `${pos.r},${pos.c}`));
-    const movedSet = new Set(movedTiles.map(pos => `${pos.r},${pos.c}`));
+    const movedMap = new Map(movedTiles.map(pos => [`${pos.r},${pos.c}`, pos]));
 
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
@@ -251,8 +251,11 @@ function renderBoard(merged = [], moveDir = null, movedTiles = [], quantumTiles 
                     tileElement.classList.add('quantum-jump');
                 }
 
-                if (moveDir && movedSet.has(`${r},${c}`)) {
-                    tileElement.classList.add(`move-${moveDir}`);
+                const moveInfo = movedMap.get(`${r},${c}`);
+                if (moveInfo) {
+                    tileElement.classList.add('move');
+                    tileElement.style.setProperty('--dx', moveInfo.dc);
+                    tileElement.style.setProperty('--dy', moveInfo.dr);
                 }
             }
             
@@ -377,10 +380,12 @@ function move(direction) {
 
     saveGameState();
     const previousBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
+    const prevWorkingBoard = transformBoard(previousBoard, direction);
     let moved = false;
     let scoreGained = 0;
     const newBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
     const mergePositionsTransformed = [];
+    const mergesByRow = Array.from({ length: settings.boardSize }, () => []);
     const quantumPositionsTransformed = [];
     
     // Transform board based on direction for easier processing
@@ -393,6 +398,7 @@ function move(direction) {
         workingBoard[r] = newRow.row;
         scoreGained += newRow.score;
         if (newRow.moved) moved = true;
+        mergesByRow[r] = newRow.merges.slice();
         newRow.merges.forEach(idx => mergePositionsTransformed.push({ r, c: idx }));
         newRow.quantumJumps.forEach(idx => quantumPositionsTransformed.push({ r, c: idx }));
     }
@@ -412,18 +418,43 @@ function move(direction) {
         }
     }
 
-    const movedPositions = [];
+    const movedMap = new Map();
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
             const tile = gameState.board[r][c];
             if (tile.id !== null) {
                 const prevPos = prevTilePositions.get(tile.id);
                 if (prevPos && (prevPos.r !== r || prevPos.c !== c)) {
-                    movedPositions.push({ r, c });
+                    movedMap.set(`${r},${c}`, {
+                        r,
+                        c,
+                        dr: prevPos.r - r,
+                        dc: prevPos.c - c
+                    });
                 }
             }
         }
     }
+
+    // Calculate merge movement from second tile using previous board data
+    for (let r = 0; r < settings.boardSize; r++) {
+        const secondIndices = getSecondTileIndices(prevWorkingBoard[r]);
+        for (let i = 0; i < mergesByRow[r].length; i++) {
+            const targetIndex = mergesByRow[r][i];
+            const sourceIndex = secondIndices[i];
+            if (sourceIndex === undefined) continue;
+            const target = transformCoord(r, targetIndex, direction, true);
+            const source = transformCoord(r, sourceIndex, direction, true);
+            movedMap.set(`${target.r},${target.c}`, {
+                r: target.r,
+                c: target.c,
+                dr: source.r - target.r,
+                dc: source.c - target.c
+            });
+        }
+    }
+
+    const movedPositions = Array.from(movedMap.values());
 
     if (moved) {
         gameState.score += scoreGained;
@@ -435,7 +466,7 @@ function move(direction) {
         }
         
         updateDisplay();
-        renderBoard(mergePositions, direction, movedPositions, quantumPositions);
+        renderBoard(mergePositions, movedPositions, quantumPositions);
 
         // Wait for merge animations to finish before spawning new tile.
         // Disable input during the animation to avoid inconsistencies.
@@ -494,6 +525,24 @@ function transformCoord(r, c, direction) {
         [newR, newC] = [settings.boardSize - 1 - c, r];
     }
     return { r: newR, c: newC };
+}
+
+function getSecondTileIndices(row) {
+    const nonZero = [];
+    for (let i = 0; i < row.length; i++) {
+        if (row[i].value !== 0) nonZero.push(i);
+    }
+    const result = [];
+    let i = 0;
+    while (i < nonZero.length) {
+        if (i < nonZero.length - 1 && row[nonZero[i]].value === row[nonZero[i + 1]].value) {
+            result.push(nonZero[i + 1]);
+            i += 2;
+        } else {
+            i += 1;
+        }
+    }
+    return result;
 }
 
 // Process a single row (merge tiles to the left)
@@ -799,6 +848,8 @@ if (typeof module !== 'undefined' && module.exports) {
         processRow,
         startGame,
         newGame,
-        initGame
+        initGame,
+        renderBoard
+
     };
 }
