@@ -437,20 +437,28 @@ function move(direction) {
         updateDisplay();
         renderBoard(mergePositions, direction, movedPositions, quantumPositions);
 
-        addRandomTile();
-        renderBoard();
-        updateBackgroundLevel();
-        checkAchievements();
-        if (quantumPositions.length > 0) {
-            createParticleEffect('quantum');
-        } else {
-            createParticleEffect('merge');
-        }
+        // Wait for merge animations to finish before spawning new tile.
+        // Disable input during the animation to avoid inconsistencies.
+        gameState.gameActive = false;
+        setTimeout(() => {
+            addRandomTile();
+            renderBoard();
+            updateBackgroundLevel();
+            checkAchievements();
 
-        // Check game over
-        if (isGameOver()) {
-            setTimeout(endGame, 500);
-        }
+            if (quantumPositions.length > 0) {
+                createParticleEffect('quantum');
+            } else {
+                createParticleEffect('merge');
+            }
+
+            // Check game over after the new tile is placed
+            if (isGameOver()) {
+                setTimeout(endGame, 500);
+            } else {
+                gameState.gameActive = true;
+            }
+        }, 250); // Match animation duration from CSS (--duration-normal)
     }
 }
 

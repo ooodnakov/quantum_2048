@@ -19,6 +19,12 @@ beforeEach(() => {
     Array.from({ length: settings.boardSize }, () => ({ id: null, value: 0 }))
   ));
   gameState.gameActive = true;
+  jest.useFakeTimers();
+});
+
+afterEach(() => {
+  Math.random.mockRestore();
+  jest.useRealTimers();
 });
 
 test('move merges tiles before spawning new one', () => {
@@ -31,8 +37,10 @@ test('move merges tiles before spawning new one', () => {
     .mockReturnValueOnce(0); // exponent offset
   // Act
   move('left');
+  // Fast-forward time to execute the setTimeout callback
+  jest.runAllTimers();
+
   // Assert
   expect(gameState.board[0][0].value).toBe(4);
   expect(gameState.board[0][1].value).toBe(2);
-  Math.random.mockRestore();
 });
