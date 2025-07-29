@@ -207,7 +207,7 @@ function addRandomTile() {
 }
 
 // Render board
-function renderBoard(merged = [], moveDir = null, movedTiles = [], quantumTiles = []) {
+function renderBoard(merged = [], movedTiles = [], quantumTiles = []) {
     const boardElement = document.getElementById('gameBoard');
     boardElement.innerHTML = '';
     boardElement.style.gridTemplateColumns = `repeat(${settings.boardSize}, 1fr)`;
@@ -215,7 +215,7 @@ function renderBoard(merged = [], moveDir = null, movedTiles = [], quantumTiles 
 
     const mergedSet = new Set(merged.map(pos => `${pos.r},${pos.c}`));
     const quantumSet = new Set(quantumTiles.map(pos => `${pos.r},${pos.c}`));
-    const movedSet = new Set(movedTiles.map(pos => `${pos.r},${pos.c}`));
+    const movedMap = new Map(movedTiles.map(pos => [`${pos.r},${pos.c}`, pos]));
 
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
@@ -251,8 +251,11 @@ function renderBoard(merged = [], moveDir = null, movedTiles = [], quantumTiles 
                     tileElement.classList.add('quantum-jump');
                 }
 
-                if (moveDir && movedSet.has(`${r},${c}`)) {
-                    tileElement.classList.add(`move-${moveDir}`);
+                const moveInfo = movedMap.get(`${r},${c}`);
+                if (moveInfo) {
+                    tileElement.classList.add('move');
+                    tileElement.style.setProperty('--dx', moveInfo.dc);
+                    tileElement.style.setProperty('--dy', moveInfo.dr);
                 }
             }
             
@@ -377,6 +380,7 @@ function move(direction) {
 
     saveGameState();
     const previousBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
+    const prevWorkingBoard = transformBoard(previousBoard, direction);
     let moved = false;
     let scoreGained = 0;
     const newBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
@@ -412,18 +416,48 @@ function move(direction) {
         }
     }
 
-    const movedPositions = [];
+    const movedMap = new Map();
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
             const tile = gameState.board[r][c];
             if (tile.id !== null) {
                 const prevPos = prevTilePositions.get(tile.id);
                 if (prevPos && (prevPos.r !== r || prevPos.c !== c)) {
-                    movedPositions.push({ r, c });
+                    movedMap.set(`${r},${c}`, {
+                        r,
+                        c,
+                        dr: prevPos.r - r,
+                        dc: prevPos.c - c
+                    });
                 }
             }
         }
     }
+
+    // Calculate merge movement from second tile
+    for (const pos of mergePositionsTransformed) {
+        const target = transformCoord(pos.r, pos.c, direction, true);
+        let count = 0;
+        let sourceIndex = pos.c;
+        for (let j = pos.c; j < settings.boardSize; j++) {
+            if (prevWorkingBoard[pos.r][j].value !== 0) {
+                count++;
+                if (count === 2) {
+                    sourceIndex = j;
+                    break;
+                }
+            }
+        }
+        const source = transformCoord(pos.r, sourceIndex, direction, true);
+        movedMap.set(`${target.r},${target.c}`, {
+            r: target.r,
+            c: target.c,
+            dr: source.r - target.r,
+            dc: source.c - target.c
+        });
+    }
+
+    const movedPositions = Array.from(movedMap.values());
 
     if (moved) {
         gameState.score += scoreGained;
@@ -436,7 +470,7 @@ function move(direction) {
         
         addRandomTile();
         updateDisplay();
-        renderBoard(mergePositions, direction, movedPositions, quantumPositions);
+        renderBoard(mergePositions, movedPositions, quantumPositions);
         updateBackgroundLevel();
         checkAchievements();
         if (quantumPositions.length > 0) {
@@ -786,6 +820,7 @@ if (typeof module !== 'undefined' && module.exports) {
         saveSettingsFromMenu,
         resetSettings,
         settings,
-        processRow
+        processRow,
+        renderBoard
     };
 }
