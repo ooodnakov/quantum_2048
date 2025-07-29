@@ -355,12 +355,48 @@ function saveGameState() {
 function rewindTime() {
     if (gameState.crystals > 0 && gameState.moveHistory.length > 0) {
         const previousState = gameState.moveHistory.pop();
-        gameState.board = previousState.board.map(row => row.map(cell => ({ ...cell })));
+
+        const currentBoard = gameState.board;
+        const prevBoard = previousState.board.map(row => row.map(cell => ({ ...cell })));
+
+        const currentPositions = new Map();
+        for (let r = 0; r < settings.boardSize; r++) {
+            for (let c = 0; c < settings.boardSize; c++) {
+                const tile = currentBoard[r][c];
+                if (tile.id !== null) {
+                    currentPositions.set(tile.id, { r, c });
+                }
+            }
+        }
+
+        const movedTiles = [];
+        for (let r = 0; r < settings.boardSize; r++) {
+            for (let c = 0; c < settings.boardSize; c++) {
+                const tile = prevBoard[r][c];
+                if (tile.id !== null) {
+                    const currPos = currentPositions.get(tile.id);
+                    if (currPos && (currPos.r !== r || currPos.c !== c)) {
+                        movedTiles.push({
+                            r,
+                            c,
+                            dr: currPos.r - r,
+                            dc: currPos.c - c
+                        });
+                    }
+                }
+            }
+        }
+
+        gameState.board = prevBoard;
         gameState.score = previousState.score;
         gameState.crystals = previousState.crystals - 1;
-        
+
         updateDisplay();
-        renderBoard();
+        renderBoard([], movedTiles);
+        gameState.gameActive = false;
+        setTimeout(() => {
+            gameState.gameActive = true;
+        }, 250);
         createParticleEffect('time');
     }
 }
@@ -860,7 +896,12 @@ if (typeof module !== 'undefined' && module.exports) {
         resetSettings,
         settings,
         processRow,
-        renderBoard,
-        moveQueue
+        moveQueue,
+        saveGameState,
+        rewindTime,
+        startGame,
+        newGame,
+        initGame,
+        renderBoard
     };
 }
