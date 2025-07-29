@@ -166,7 +166,8 @@ function initGame() {
     gameState.gameActive = true;
     
     // Add initial tiles based on configured startingTiles setting
-    addRandomTiles(settings.startingTiles);
+    // Each starting tile increases in value
+    addProgressiveTiles(settings.startingTiles);
     
     updateDisplay();
     renderBoard();
@@ -220,6 +221,32 @@ function addRandomTile() {
 function addRandomTiles(count) {
     for (let i = 0; i < count; i++) {
         addRandomTile();
+    }
+}
+
+// Add a tile with a specific value
+function addTileWithValue(value) {
+    const emptyCells = [];
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
+            if (gameState.board[r][c].value === 0) {
+                emptyCells.push({ r, c });
+            }
+        }
+    }
+
+    if (emptyCells.length > 0) {
+        const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        gameState.board[randomCell.r][randomCell.c] = createTile(value);
+        gameState.lastAdded = { r: randomCell.r, c: randomCell.c };
+    }
+}
+
+// Spawn starting tiles with progressively larger values
+function addProgressiveTiles(count) {
+    const toSpawn = Math.min(count, settings.boardSize * settings.boardSize);
+    for (let i = 0; i < toSpawn; i++) {
+        addTileWithValue(2 ** (i + 1));
     }
 }
 
@@ -788,7 +815,10 @@ function saveSettingsFromMenu() {
     if (!Number.isNaN(startingCrystals)) settings.startingCrystals = startingCrystals;
 
     const startingTiles = parseInt(document.getElementById('settingStartTiles').value, 10);
-    if (!Number.isNaN(startingTiles)) settings.startingTiles = startingTiles;
+    if (!Number.isNaN(startingTiles)) {
+        const maxTiles = settings.boardSize * settings.boardSize;
+        settings.startingTiles = Math.max(1, Math.min(startingTiles, maxTiles));
+    }
 
     const quantumBonusChance = parseInt(document.getElementById('settingQuantumChance').value, 10);
     if (!Number.isNaN(quantumBonusChance)) settings.quantumBonusChance = quantumBonusChance / 100;
@@ -908,6 +938,8 @@ if (typeof module !== 'undefined' && module.exports) {
         transformCoord,
         addRandomTile,
         addRandomTiles,
+        addTileWithValue,
+        addProgressiveTiles,
         getMaxTile,
         loadSettings,
         saveSettings,

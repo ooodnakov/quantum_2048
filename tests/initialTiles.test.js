@@ -18,10 +18,14 @@ describe('initial tile spawn', () => {
     setupDom();
   });
 
-  test('initGame spawns tiles based on startingTiles setting', () => {
+  test('initGame spawns progressively larger tiles based on startingTiles', () => {
     settings.startingTiles = 4;
     initGame();
-    const count = gameState.board.flat().filter(t => t.value > 0).length;
-    expect(count).toBe(4);
+    const values = gameState.board
+      .flat()
+      .filter(t => t.value > 0)
+      .map(t => t.value)
+      .sort((a, b) => a - b);
+    expect(values).toEqual([2, 4, 8, 16]);
   });
 });
