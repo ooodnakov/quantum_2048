@@ -846,6 +846,10 @@ if (typeof module !== 'undefined' && module.exports) {
         resetSettings,
         settings,
         processRow,
+        startGame,
+        newGame,
+        initGame,
         renderBoard
+
     };
 }
