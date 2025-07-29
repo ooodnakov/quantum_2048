@@ -796,6 +796,9 @@ if (typeof module !== 'undefined' && module.exports) {
         saveSettingsFromMenu,
         resetSettings,
         settings,
-        processRow
+        processRow,
+        startGame,
+        newGame,
+        initGame
     };
 }
