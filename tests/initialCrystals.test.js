@@ -14,14 +14,27 @@ function setupDom() {
 }
 
 describe('initial crystal spawn', () => {
+  let originalBoardSize;
+
   beforeEach(() => {
     setupDom();
+    originalBoardSize = settings.boardSize;
     gameState.moveHistory = [];
+  });
+
+  afterEach(() => {
+    settings.boardSize = originalBoardSize;
   });
 
   test('larger boards grant additional crystals', () => {
     settings.boardSize = 10;
     initGame();
-    expect(gameState.crystals).toBe(Math.max(settings.startingCrystals, Math.floor(settings.boardSize / 2) - 1));
+    expect(gameState.crystals).toBe(4);
+  });
+
+  test('smaller boards use starting crystals', () => {
+    settings.boardSize = 4;
+    initGame();
+    expect(gameState.crystals).toBe(settings.startingCrystals);
   });
 });
