@@ -472,16 +472,16 @@ function transformBoard(board, direction, reverse = false) {
     return newBoard;
 }
 
-function transformCoord(r, c, direction, reverse = false) {
+function transformCoord(r, c, direction) {
     let newR, newC;
     if (direction === 'left') {
-        [newR, newC] = reverse ? [c, r] : [r, c];
+        [newR, newC] = [r, c];
     } else if (direction === 'right') {
-        [newR, newC] = reverse ? [c, settings.boardSize - 1 - r] : [r, settings.boardSize - 1 - c];
+        [newR, newC] = [r, settings.boardSize - 1 - c];
     } else if (direction === 'up') {
-        [newR, newC] = reverse ? [r, c] : [c, r];
+        [newR, newC] = [c, r];
     } else {
-        [newR, newC] = reverse ? [settings.boardSize - 1 - r, c] : [settings.boardSize - 1 - c, r];
+        [newR, newC] = [settings.boardSize - 1 - c, r];
     }
     return { r: newR, c: newC };
 }
