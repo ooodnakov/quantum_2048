@@ -135,6 +135,12 @@ function createTile(value = 0) {
     return { id: value === 0 ? null : gameState.nextId++, value };
 }
 
+// Determine initial crystal count based on board size
+function getInitialCrystals(boardSize) {
+    const sizeBased = Math.floor(boardSize / 2) - 1;
+    return Math.max(settings.startingCrystals, sizeBased);
+}
+
 // Initialize game
 function initGame() {
     // Load best score from localStorage if available
@@ -152,7 +158,7 @@ function initGame() {
     gameState.nextId = 1;
     gameState.lastAdded = null;
     gameState.score = 0;
-    gameState.crystals = settings.startingCrystals;
+    gameState.crystals = getInitialCrystals(settings.boardSize);
     gameState.gravity = 'south';
     gameState.moveHistory = [];
     gameState.gameActive = true;
@@ -896,6 +902,7 @@ if (typeof module !== 'undefined' && module.exports) {
         resetSettings,
         settings,
         processRow,
+        getInitialCrystals,
         moveQueue,
         saveGameState,
         rewindTime,
