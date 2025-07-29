@@ -74,4 +74,71 @@ describe('settings persistence', () => {
     expect(document.getElementById('startScreen').classList.contains('hidden')).toBe(false);
     expect(document.getElementById('gameScreen').classList.contains('hidden')).toBe(true);
   });
+
+  test('new game uses persisted settings', () => {
+    document.body.innerHTML = `
+      <div id="score"></div>
+      <div id="bestScore"></div>
+      <div id="crystalCount"></div>
+      <div id="gravityArrow"></div>
+      <button id="rewindButton"></button>
+      <div id="gameBoard"></div>
+      <div id="gameScreen"></div>
+      <div id="gameOverScreen"></div>
+      <div id="particlesContainer"></div>
+      <div id="startScreen"></div>
+      <div id="settingsScreen"></div>
+    `;
+
+    let app = require('../app.js');
+    app.settings.boardSize = 5;
+    app.settings.startingCrystals = 2;
+    app.saveSettings();
+
+    jest.resetModules();
+    document.body.innerHTML = `
+      <div id="score"></div>
+      <div id="bestScore"></div>
+      <div id="crystalCount"></div>
+      <div id="gravityArrow"></div>
+      <button id="rewindButton"></button>
+      <div id="gameBoard"></div>
+      <div id="gameScreen"></div>
+      <div id="gameOverScreen"></div>
+      <div id="particlesContainer"></div>
+      <div id="startScreen"></div>
+      <div id="settingsScreen"></div>
+    `;
+    app = require('../app.js');
+    app.startGame();
+
+    expect(app.gameState.board.length).toBe(5);
+    expect(app.gameState.board[0].length).toBe(5);
+    expect(app.gameState.crystals).toBe(2);
+  });
+
+  test('reset settings affects subsequent games', () => {
+    document.body.innerHTML = `
+      <div id="score"></div>
+      <div id="bestScore"></div>
+      <div id="crystalCount"></div>
+      <div id="gravityArrow"></div>
+      <button id="rewindButton"></button>
+      <div id="gameBoard"></div>
+      <div id="gameScreen"></div>
+      <div id="gameOverScreen"></div>
+      <div id="particlesContainer"></div>
+      <div id="startScreen"></div>
+      <div id="settingsScreen"></div>
+    `;
+
+    const app = require('../app.js');
+    app.settings.boardSize = 7;
+    app.settings.startingCrystals = 5;
+    app.resetSettings();
+    app.startGame();
+
+    expect(app.gameState.board.length).toBe(6);
+    expect(app.gameState.crystals).toBe(3);
+  });
 });

@@ -882,8 +882,11 @@ if (typeof module !== 'undefined' && module.exports) {
         resetSettings,
         settings,
         processRow,
-        renderBoard,
         saveGameState,
-        rewindTime
+        rewindTime,
+        startGame,
+        newGame,
+        initGame,
+        renderBoard
     };
 }
