@@ -154,7 +154,7 @@ function spawnEchoDuplicateTile(r, c, value) {
     const emptyCells = [];
     for (let rr = 0; rr < settings.boardSize; rr++) {
         for (let cc = 0; cc < settings.boardSize; cc++) {
-            if (gameState.board[rr][cc].value === 0 && rr !== r && cc !== c) {
+            if (gameState.board[rr][cc].value === 0) {
                 emptyCells.push({ r: rr, c: cc });
             }
         }
@@ -487,6 +487,7 @@ function move(direction) {
     const mergePositionsTransformed = [];
     const mergesByRow = Array.from({ length: settings.boardSize }, () => []);
     const quantumPositionsTransformed = [];
+    const removedEchoIds = [];
     
     // Transform board based on direction for easier processing
     let workingBoard = transformBoard(newBoard, direction);
@@ -494,17 +495,29 @@ function move(direction) {
     // Process each row
     for (let r = 0; r < settings.boardSize; r++) {
         const row = workingBoard[r];
-        const newRow = processRow(row);
-        workingBoard[r] = newRow.row;
-        scoreGained += newRow.score;
-        if (newRow.moved) moved = true;
-        mergesByRow[r] = newRow.merges.slice();
-        newRow.merges.forEach(idx => mergePositionsTransformed.push({ r, c: idx }));
-        newRow.quantumJumps.forEach(idx => quantumPositionsTransformed.push({ r, c: idx }));
+        const result = processRow(row);
+        workingBoard[r] = result.row;
+        scoreGained += result.score;
+        if (result.moved) moved = true;
+        mergesByRow[r] = result.merges.slice();
+        result.merges.forEach(idx => mergePositionsTransformed.push({ r, c: idx }));
+        result.quantumJumps.forEach(idx => quantumPositionsTransformed.push({ r, c: idx }));
+        if (result.removedEchoId) removedEchoIds.push(result.removedEchoId);
     }
     
     // Transform back
     gameState.board = transformBoard(workingBoard, direction, true);
+
+    // Remove any echo duplicates that were merged
+    for (const id of removedEchoIds) {
+        const pair = gameState.echoPairs.get(id);
+        if (pair) {
+            const { r, c } = pair.copyPos;
+            gameState.board[r][c] = createTile();
+            gameState.echoPairs.delete(id);
+            gameState.crystals += 1;
+        }
+    }
     const mergePositions = mergePositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     const quantumPositions = quantumPositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     
@@ -664,6 +677,7 @@ function processRow(row) {
     let moved = row.some((tile, i) => tile.value !== (newRow[i] ? newRow[i].value : 0));
     const merges = [];
     const quantumJumps = [];
+    let removedEchoId = null;
     
     // Merge adjacent equal tiles
     for (let i = 0; i < newRow.length - 1; i++) {
@@ -687,10 +701,7 @@ function processRow(row) {
             // Echo duplicate handling
             for (const [origId, pair] of gameState.echoPairs.entries()) {
                 if ([left.id, right.id].includes(origId) || [left.id, right.id].includes(pair.copyId)) {
-                    const { r, c } = pair.copyPos;
-                    gameState.board[r][c] = createTile();
-                    gameState.echoPairs.delete(origId);
-                    gameState.crystals += 1;
+                    removedEchoId = origId;
                     break;
                 }
             }
@@ -708,7 +719,7 @@ function processRow(row) {
     }
 
     // Portal teleportation
-    for (let i = 0; i < newRow.length - 1; i++) {
+    for (let i = newRow.length - 2; i >= 0; i--) {
         if (newRow[i].type === 'portal' && newRow[i + 1].type !== 'portal') {
             const tele = newRow.splice(i + 1, 1)[0];
             while (newRow.length < settings.boardSize - 1) {
@@ -724,7 +735,7 @@ function processRow(row) {
         newRow.push(createTile());
     }
 
-    return { row: newRow, score, moved, merges, quantumJumps };
+    return { row: newRow, score, moved, merges, quantumJumps, removedEchoId };
 }
 
 // Check achievements

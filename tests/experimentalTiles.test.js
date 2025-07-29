@@ -54,9 +54,12 @@ test('nexus portal teleports tile to opposite side', () => {
 });
 
 test('merging portals clears a row', () => {
+  jest.useFakeTimers();
   spawnNexusPortalTile(1,0,2);
   spawnNexusPortalTile(1,1,2);
   move('left');
+  jest.runAllTimers();
   const cleared = gameState.board.some(row => row.every(cell => cell.value === 0));
   expect(cleared).toBe(true);
+  jest.useRealTimers();
 });
