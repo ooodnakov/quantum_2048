@@ -255,16 +255,15 @@ function addRandomTile() {
         const value = 2 ** newExponent;
 
         const rand = Math.random();
-        if (rand < settings.phaseShiftSpawnChance) {
+        const p1 = settings.phaseShiftSpawnChance;
+        const p2 = p1 + settings.echoDuplicateSpawnChance;
+        const p3 = p2 + settings.nexusPortalSpawnChance;
+
+        if (rand < p1) {
             spawnPhaseShiftTile(randomCell.r, randomCell.c, value);
-        } else if (rand < settings.phaseShiftSpawnChance + settings.echoDuplicateSpawnChance) {
+        } else if (rand < p2) {
             spawnEchoDuplicateTile(randomCell.r, randomCell.c, value);
-        } else if (
-            rand <
-            settings.phaseShiftSpawnChance +
-                settings.echoDuplicateSpawnChance +
-                settings.nexusPortalSpawnChance
-        ) {
+        } else if (rand < p3) {
             spawnNexusPortalTile(randomCell.r, randomCell.c, value);
         } else {
             gameState.board[randomCell.r][randomCell.c] = createTile(value);
@@ -924,12 +923,14 @@ function populateSettingsInputs() {
     document.getElementById('settingCrystals').value = settings.startingCrystals;
     document.getElementById('settingStartTiles').value = settings.startingTiles;
     document.getElementById('settingQuantumChance').value = Math.round(settings.quantumBonusChance * 100);
-    const phaseEl = document.getElementById('settingPhaseSpawn');
-    if (phaseEl) phaseEl.value = Math.round(settings.phaseShiftSpawnChance * 100);
-    const echoEl = document.getElementById('settingEchoSpawn');
-    if (echoEl) echoEl.value = Math.round(settings.echoDuplicateSpawnChance * 100);
-    const nexusEl = document.getElementById('settingNexusSpawn');
-    if (nexusEl) nexusEl.value = Math.round(settings.nexusPortalSpawnChance * 100);
+    [
+        ['settingPhaseSpawn', settings.phaseShiftSpawnChance],
+        ['settingEchoSpawn', settings.echoDuplicateSpawnChance],
+        ['settingNexusSpawn', settings.nexusPortalSpawnChance]
+    ].forEach(([id, chance]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = Math.round(chance * 100);
+    });
     document.getElementById('settingHistory').value = settings.maxMoveHistory;
 }
 
@@ -960,23 +961,17 @@ function saveSettingsFromMenu() {
     const quantumBonusChance = parseInt(document.getElementById('settingQuantumChance').value, 10);
     if (!Number.isNaN(quantumBonusChance)) settings.quantumBonusChance = quantumBonusChance / 100;
 
-    const phaseEl = document.getElementById('settingPhaseSpawn');
-    if (phaseEl) {
-        const phaseChance = parseInt(phaseEl.value, 10);
-        if (!Number.isNaN(phaseChance)) settings.phaseShiftSpawnChance = phaseChance / 100;
-    }
-
-    const echoEl = document.getElementById('settingEchoSpawn');
-    if (echoEl) {
-        const echoChance = parseInt(echoEl.value, 10);
-        if (!Number.isNaN(echoChance)) settings.echoDuplicateSpawnChance = echoChance / 100;
-    }
-
-    const nexusEl = document.getElementById('settingNexusSpawn');
-    if (nexusEl) {
-        const nexusChance = parseInt(nexusEl.value, 10);
-        if (!Number.isNaN(nexusChance)) settings.nexusPortalSpawnChance = nexusChance / 100;
-    }
+    [
+        ['settingPhaseSpawn', 'phaseShiftSpawnChance'],
+        ['settingEchoSpawn', 'echoDuplicateSpawnChance'],
+        ['settingNexusSpawn', 'nexusPortalSpawnChance']
+    ].forEach(([id, settingName]) => {
+        const el = document.getElementById(id);
+        if (el) {
+            const chance = parseInt(el.value, 10);
+            if (!Number.isNaN(chance)) settings[settingName] = chance / 100;
+        }
+    });
 
     const maxMoveHistory = parseInt(document.getElementById('settingHistory').value, 10);
     if (!Number.isNaN(maxMoveHistory)) settings.maxMoveHistory = maxMoveHistory;

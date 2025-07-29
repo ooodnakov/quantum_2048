@@ -28,31 +28,16 @@ describe('experimental tile spawn chances', () => {
     gameState.echoPairs.clear();
   });
 
-  test('phase shift tile spawns when chance is 100%', () => {
-    settings.phaseShiftSpawnChance = 1;
-    settings.echoDuplicateSpawnChance = 0;
-    settings.nexusPortalSpawnChance = 0;
+  test.each([
+    { name: 'phase shift', type: 'phase', chances: { phaseShiftSpawnChance: 1, echoDuplicateSpawnChance: 0, nexusPortalSpawnChance: 0 } },
+    { name: 'echo duplicate', type: 'echo', chances: { phaseShiftSpawnChance: 0, echoDuplicateSpawnChance: 1, nexusPortalSpawnChance: 0 } },
+    { name: 'nexus portal', type: 'portal', chances: { phaseShiftSpawnChance: 0, echoDuplicateSpawnChance: 0, nexusPortalSpawnChance: 1 } }
+  ])('$name tile spawns when chance is 100%', ({ type, chances }) => {
+    Object.assign(settings, chances);
     addRandomTile();
-    const found = gameState.board.some(row => row.some(cell => cell.type === 'phase'));
+    const found = gameState.board.some(row => row.some(cell => cell.type === type));
     expect(found).toBe(true);
-  });
-
-  test('echo duplicate tile spawns when chance is 100%', () => {
-    settings.phaseShiftSpawnChance = 0;
-    settings.echoDuplicateSpawnChance = 1;
-    settings.nexusPortalSpawnChance = 0;
-    addRandomTile();
-    const found = gameState.board.some(row => row.some(cell => cell.type === 'echo'));
-    expect(found).toBe(true);
-    expect(gameState.echoPairs.size).toBe(1);
-  });
-
-  test('nexus portal tile spawns when chance is 100%', () => {
-    settings.phaseShiftSpawnChance = 0;
-    settings.echoDuplicateSpawnChance = 0;
-    settings.nexusPortalSpawnChance = 1;
-    addRandomTile();
-    const found = gameState.board.some(row => row.some(cell => cell.type === 'portal'));
-    expect(found).toBe(true);
+    const expectedEchoPairs = type === 'echo' ? 1 : 0;
+    expect(gameState.echoPairs.size).toBe(expectedEchoPairs);
   });
 });
