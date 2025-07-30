@@ -119,6 +119,16 @@ function getMaxTile(board) {
     return max;
 }
 
+// Update the total and best scores
+function updateScore(gained) {
+    if (gained <= 0) return;
+    gameState.score += gained;
+    if (gameState.score > gameState.bestScore) {
+        gameState.bestScore = gameState.score;
+        localStorage.setItem('quantum2048_best', gameState.bestScore.toString());
+    }
+}
+
 const GRAVITY_ARROWS = {
     north: '⬆️',
     east: '➡️',
@@ -613,13 +623,7 @@ function move(direction) {
     const movedPositions = Array.from(movedMap.values());
 
     if (moved) {
-        gameState.score += scoreGained;
-        
-        // Update best score
-        if (gameState.score > gameState.bestScore) {
-            gameState.bestScore = gameState.score;
-            localStorage.setItem('quantum2048_best', gameState.bestScore.toString());
-        }
+        updateScore(scoreGained);
         
         updateDisplay();
         renderBoard(mergePositions, movedPositions);
@@ -635,13 +639,7 @@ function move(direction) {
             }
 
             const qResult = performQuantumJumps();
-            if (qResult.scoreGained > 0) {
-                gameState.score += qResult.scoreGained;
-                if (gameState.score > gameState.bestScore) {
-                    gameState.bestScore = gameState.score;
-                    localStorage.setItem('quantum2048_best', gameState.bestScore.toString());
-                }
-            }
+            updateScore(qResult.scoreGained);
 
             renderBoard(qResult.mergedPositions, qResult.movedTiles, qResult.quantumPositions);
             updateDisplay();
@@ -887,10 +885,6 @@ function performQuantumJumps() {
     const size = settings.boardSize;
 
     function handlePair(r1, c1, r2, c2) {
-        if (
-            r1 < 0 || r1 >= size || c1 < 0 || c1 >= size ||
-            r2 < 0 || r2 >= size || c2 < 0 || c2 >= size
-        ) return;
         const key1 = `${r1},${c1}`;
         const key2 = `${r2},${c2}`;
         if (visited.has(key1) || visited.has(key2)) return;
@@ -1156,6 +1150,7 @@ if (typeof module !== 'undefined' && module.exports) {
         spawnPhaseShiftTile,
         spawnEchoDuplicateTile,
         spawnNexusPortalTile,
-        performQuantumJumps
+        performQuantumJumps,
+        updateScore
     };
 }
