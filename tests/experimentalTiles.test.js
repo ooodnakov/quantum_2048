@@ -31,16 +31,16 @@ beforeEach(() => {
   gameState.echoPairs.clear();
 });
 
-test('phase shift merge preserves gravity setting', () => {
+
+test('merging a phase shift tile results in a normal tile', () => {
   spawnPhaseShiftTile(0, 0, 2);
   gameState.board[0][1] = { id: 99, value: 2 };
-  const startGravity = gameState.gravity;
+  jest.useFakeTimers();
   move('left');
-  expect(gameState.gravity).toBe(startGravity);
-  jest.spyOn(Math, 'random').mockReturnValue(0);
-  move('left');
-  expect(gameState.gravity).toBe(startGravity);
-  Math.random.mockRestore();
+  jest.runAllTimers();
+  expect(gameState.board[0][0].type).toBe('normal');
+  expect(gameState.board[0][0].value).toBe(4);
+  jest.useRealTimers();
 });
 
 test('phase shift tile toggles visibility based on counter', () => {
@@ -70,6 +70,7 @@ test('phased tile allows other tiles to pass through', () => {
   gameState.board[0][1].phased = true;
   gameState.board[0][1].storedValue = 4;
   gameState.board[0][1].value = 0;
+  gameState.board[0][1].phaseCounter = 2;
   jest.useFakeTimers();
   move('right');
   jest.runAllTimers();

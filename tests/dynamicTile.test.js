@@ -35,3 +35,25 @@ test('quantum jumps merge diagonal tiles', () => {
   expect(result.quantumPositions).toEqual([{ r: 0, c: 0 }]);
   Math.random.mockRestore();
 });
+
+test('quantum jump probability follows settings', () => {
+  gameState.board[0][0].value = 2;
+  gameState.board[1][1].value = 2;
+  jest.spyOn(Math, 'random').mockReturnValue(0);
+  const original = settings.quantumBonusChance;
+  try {
+    settings.quantumBonusChance = 0;
+    let result = performQuantumJumps();
+    expect(result.quantumPositions).toEqual([]);
+    expect(gameState.board[0][0].value).toBe(2);
+    expect(gameState.board[1][1].value).toBe(2);
+    settings.quantumBonusChance = 1;
+    result = performQuantumJumps();
+    expect(result.quantumPositions).toEqual([{ r: 0, c: 0 }]);
+    expect(gameState.board[0][0].value).toBe(4);
+    expect(gameState.board[1][1].value).toBe(0);
+  } finally {
+    settings.quantumBonusChance = original;
+    Math.random.mockRestore();
+  }
+});
