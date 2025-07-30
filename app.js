@@ -79,6 +79,121 @@ function resetSettings() {
 // Load persisted settings immediately
 loadSettings();
 
+// Language translations
+const translations = {
+    en: {
+        label_language: 'Language',
+        title: 'Quantum 2048',
+        subtitle: 'The next evolution of 2048',
+        how_to_play: 'How to Play',
+        instruction_arrows: '🎯 Use arrow keys to slide tiles',
+        instruction_rewind: '⏰ Press R to rewind time (uses time crystals)',
+        instruction_delete: '🗑️ Use Delete to remove a tile (costs void crystals)',
+        instruction_jump: '✨ Diagonal twins might quantum jump together after a move',
+        instruction_record: '📈 How high can you go? Merge tiles to set a new record!',
+        start_button: 'Start Quantum Journey',
+        settings_button: '⚙️ Settings',
+        settings_heading: 'Settings',
+        label_board_size: 'Board Size',
+        label_starting_crystals: 'Starting Crystals',
+        label_starting_tiles: 'Starting Tiles',
+        label_quantum_chance: 'Quantum Bonus Chance (%)',
+        label_phase_spawn: 'Phase Shift Spawn Chance (%)',
+        label_echo_spawn: 'Echo Duplicate Spawn Chance (%)',
+        label_nexus_spawn: 'Nexus Portal Spawn Chance (%)',
+        label_rewind_history: 'Rewind History',
+        save_button: 'Save',
+        revert_button: 'Revert',
+        back_button: 'Back',
+        score_label: 'Score',
+        best_label: 'Best',
+        time_crystals_label: 'Time Crystals',
+        void_crystals_label: 'Void Crystals',
+        rewind_button: '⏰ Rewind',
+        delete_button: '🗑️ Delete',
+        new_game_button: '🔄 New Game',
+        evolution_path_heading: 'Evolution Path',
+        game_over_title: 'Quantum Journey Complete!',
+        final_score_label: 'Final Score',
+        play_again_button: 'Play Again',
+        main_menu_button: 'Main Menu'
+    },
+    ru: {
+        label_language: 'Язык',
+        title: 'Квантовый 2048',
+        subtitle: 'Следующая эволюция 2048',
+        how_to_play: 'Как играть',
+        instruction_arrows: '🎯 Используйте стрелки для перемещения плиток',
+        instruction_rewind: '⏰ Нажмите R, чтобы отмотать время (использует временные кристаллы)',
+        instruction_delete: '🗑️ Нажмите Delete, чтобы удалить плитку (требует кристаллы пустоты)',
+        instruction_jump: '✨ Диагональные двойники могут квантово прыгнуть после хода',
+        instruction_record: '📈 Сколько сможете набрать? Соединяйте плитки и ставьте рекорды!',
+        start_button: 'Начать квантовое путешествие',
+        settings_button: '⚙️ Настройки',
+        settings_heading: 'Настройки',
+        label_board_size: 'Размер поля',
+        label_starting_crystals: 'Начальные кристаллы',
+        label_starting_tiles: 'Начальные плитки',
+        label_quantum_chance: 'Шанс квантового бонуса (%)',
+        label_phase_spawn: 'Шанс появления фазового блока (%)',
+        label_echo_spawn: 'Шанс появления блока-эхо (%)',
+        label_nexus_spawn: 'Шанс появления портала (%)',
+        label_rewind_history: 'Глубина отката',
+        save_button: 'Сохранить',
+        revert_button: 'Сбросить',
+        back_button: 'Назад',
+        score_label: 'Счёт',
+        best_label: 'Рекорд',
+        time_crystals_label: 'Временные кристаллы',
+        void_crystals_label: 'Кристаллы пустоты',
+        rewind_button: '⏰ Отмотать',
+        delete_button: '🗑️ Удалить',
+        new_game_button: '🔄 Новая игра',
+        evolution_path_heading: 'Путь эволюции',
+        game_over_title: 'Квантовое путешествие окончено!',
+        final_score_label: 'Итоговый счёт',
+        play_again_button: 'Играть ещё',
+        main_menu_button: 'Главное меню'
+    }
+};
+
+let currentLanguage = 'en';
+
+function loadLanguage() {
+    const saved = localStorage.getItem('quantum2048_lang');
+    if (saved && translations[saved]) {
+        currentLanguage = saved;
+    }
+}
+
+function applyTranslations() {
+    if (typeof document === 'undefined') return;
+    const elements = document.querySelectorAll('[data-i18n]');
+    elements.forEach(el => {
+        const key = el.dataset.i18n;
+        const text = translations[currentLanguage][key];
+        if (text) {
+            el.textContent = text;
+        }
+    });
+    const select = document.getElementById('languageSelect');
+    if (select) select.value = currentLanguage;
+    document.documentElement.lang = currentLanguage;
+}
+
+function setLanguage(lang) {
+    if (!translations[lang]) return;
+    currentLanguage = lang;
+    localStorage.setItem('quantum2048_lang', lang);
+    applyTranslations();
+}
+
+function getCurrentLanguage() {
+    return currentLanguage;
+}
+
+loadLanguage();
+
 // Generate a color for tiles beyond the predefined range
 function getTileColor(value) {
     if (TILE_COLORS[value]) return TILE_COLORS[value];
@@ -1202,6 +1317,7 @@ document.addEventListener('touchend', handleTouchEnd, { passive: false });
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     updateDisplay();
+    applyTranslations();
     const board = document.getElementById('gameBoard');
     board.addEventListener('click', handleBoardClick);
 });
@@ -1216,6 +1332,7 @@ if (typeof window !== 'undefined') {
     window.closeSettings = closeSettings;
     window.saveSettingsFromMenu = saveSettingsFromMenu;
     window.resetSettingsFromMenu = resetSettingsFromMenu;
+    window.handleLanguageChange = setLanguage;
 }
 
 // Export for testing environments
@@ -1259,6 +1376,9 @@ if (typeof module !== 'undefined' && module.exports) {
         formatScoreDisplay,
         deleteTileAt,
         enterDeleteMode,
-        handleBoardClick
+        handleBoardClick,
+        setLanguage,
+        getCurrentLanguage,
+        applyTranslations
     };
 }
