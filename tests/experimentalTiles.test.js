@@ -31,7 +31,7 @@ beforeEach(() => {
   gameState.echoPairs.clear();
 });
 
-test('phase shift merge randomizes gravity on next move', () => {
+test('phase shift merge preserves gravity setting', () => {
   spawnPhaseShiftTile(0, 0, 2);
   gameState.board[0][1] = { id: 99, value: 2 };
   const startGravity = gameState.gravity;
@@ -39,7 +39,7 @@ test('phase shift merge randomizes gravity on next move', () => {
   expect(gameState.gravity).toBe(startGravity);
   jest.spyOn(Math, 'random').mockReturnValue(0);
   move('left');
-  expect(gameState.gravity).toBe('north');
+  expect(gameState.gravity).toBe(startGravity);
   Math.random.mockRestore();
 });
 
