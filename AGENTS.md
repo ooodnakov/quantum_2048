@@ -21,7 +21,7 @@ Quantum 2048 is a JavaScript implementation of the classic 2048 puzzle with expe
 - **Coverage:** `npm test -- --coverage`
 
 # PR / Git Guidelines
-- PR titles follow `[Feat]: <summary>` or `[Fix]: <summary>` format
+- PR titles follow conventional commit format (e.g., `[Feat]: <summary>`, `[Fix]: <summary>`, `[Docs]: <summary>`)
 - Provide a concise summary and mention important test notes in the description
 
 # Testing Protocol
