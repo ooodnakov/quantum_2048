@@ -999,7 +999,7 @@ body {
 .tile.tile-128 { background: #ec407a; color: white; }
 .tile.tile-256 { background: #f5f5f5; color: #333; }
 .tile.tile-512 { background: gold; color: #333; }
-.tile.tile-1024 { background: platinum; color: #333; }
+.tile.tile-1024 { background: #e5e4e2; color: #111; }
 
 .tile.quantum {
     position: relative;
