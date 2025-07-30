@@ -35,3 +35,7 @@ Each block type is styled with its own border color and effects so they are easy
 
 ## Continuous Integration
 This project uses GitHub Actions to run ESLint and Jest on every push and pull request.
+
+### Localization
+
+The interface supports both English and Russian languages. Use the language selector at the top of the page to switch languages. Your choice is saved in local storage.

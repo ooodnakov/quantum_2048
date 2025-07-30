@@ -7,27 +7,34 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="language-switch">
+        <label for="languageSelect" data-i18n="label_language">Language</label>
+        <select id="languageSelect" onchange="handleLanguageChange(this.value)">
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+        </select>
+    </div>
     <!-- Start Screen -->
     <div id="startScreen" class="screen start-screen">
         <div class="start-content">
-            <h1 class="game-title">Quantum 2048</h1>
-            <p class="game-subtitle">The next evolution of 2048</p>
+            <h1 class="game-title" data-i18n="title">Quantum 2048</h1>
+            <p class="game-subtitle" data-i18n="subtitle">The next evolution of 2048</p>
             
             <div class="instructions-card">
-                <h3>How to Play</h3>
+                <h3 data-i18n="how_to_play">How to Play</h3>
                 <ul class="instructions-list">
-                    <li>🎯 Use arrow keys to slide tiles</li>
-                    <li>⏰ Press R to rewind time (uses time crystals)</li>
-                    <li>🗑️ Use Delete to remove a tile (costs void crystals)</li>
-                    <li>✨ Diagonal twins might quantum jump together after a move</li>
-                    <li>📈 How high can you go? Merge tiles to set a new record!</li>
+                    <li data-i18n="instruction_arrows">🎯 Use arrow keys to slide tiles</li>
+                    <li data-i18n="instruction_rewind">⏰ Press R to rewind time (uses time crystals)</li>
+                    <li data-i18n="instruction_delete">🗑️ Use Delete to remove a tile (costs void crystals)</li>
+                    <li data-i18n="instruction_jump">✨ Diagonal twins might quantum jump together after a move</li>
+                    <li data-i18n="instruction_record">📈 How high can you go? Merge tiles to set a new record!</li>
                 </ul>
             </div>
             
-            <button class="btn btn--primary btn--lg start-button" onclick="startGame()">
+            <button class="btn btn--primary btn--lg start-button" onclick="startGame()" data-i18n="start_button">
                 Start Quantum Journey
             </button>
-            <button class="btn btn--secondary" onclick="openSettings()">
+            <button class="btn btn--secondary" onclick="openSettings()" data-i18n="settings_button">
                 ⚙️ Settings
             </button>
         </div>
@@ -36,19 +43,19 @@
     <!-- Settings Screen -->
     <div id="settingsScreen" class="screen settings-screen hidden">
         <div class="settings-content">
-            <h2>Settings</h2>
-            <label>Board Size <input type="number" id="settingBoardSize" min="3" max="10"></label>
-            <label>Starting Crystals <input type="number" id="settingCrystals" min="0" max="10"></label>
-            <label>Starting Tiles <input type="number" id="settingStartTiles" min="1" max="10"></label>
-            <label>Quantum Bonus Chance (%) <input type="number" id="settingQuantumChance" min="0" max="100"></label>
-            <label>Phase Shift Spawn Chance (%) <input type="number" id="settingPhaseSpawn" min="0" max="100"></label>
-            <label>Echo Duplicate Spawn Chance (%) <input type="number" id="settingEchoSpawn" min="0" max="100"></label>
-            <label>Nexus Portal Spawn Chance (%) <input type="number" id="settingNexusSpawn" min="0" max="100"></label>
-            <label>Rewind History <input type="number" id="settingHistory" min="1" max="10"></label>
+            <h2 data-i18n="settings_heading">Settings</h2>
+            <label><span data-i18n="label_board_size">Board Size</span> <input type="number" id="settingBoardSize" min="3" max="10"></label>
+            <label><span data-i18n="label_starting_crystals">Starting Crystals</span> <input type="number" id="settingCrystals" min="0" max="10"></label>
+            <label><span data-i18n="label_starting_tiles">Starting Tiles</span> <input type="number" id="settingStartTiles" min="1" max="10"></label>
+            <label><span data-i18n="label_quantum_chance">Quantum Bonus Chance (%)</span> <input type="number" id="settingQuantumChance" min="0" max="100"></label>
+            <label><span data-i18n="label_phase_spawn">Phase Shift Spawn Chance (%)</span> <input type="number" id="settingPhaseSpawn" min="0" max="100"></label>
+            <label><span data-i18n="label_echo_spawn">Echo Duplicate Spawn Chance (%)</span> <input type="number" id="settingEchoSpawn" min="0" max="100"></label>
+            <label><span data-i18n="label_nexus_spawn">Nexus Portal Spawn Chance (%)</span> <input type="number" id="settingNexusSpawn" min="0" max="100"></label>
+            <label><span data-i18n="label_rewind_history">Rewind History</span> <input type="number" id="settingHistory" min="1" max="10"></label>
             <div class="settings-actions">
-                <button class="btn btn--primary" onclick="saveSettingsFromMenu()">Save</button>
-                <button class="btn btn--secondary" onclick="resetSettingsFromMenu()">Revert</button>
-                <button class="btn" onclick="closeSettings()">Back</button>
+                <button class="btn btn--primary" onclick="saveSettingsFromMenu()" data-i18n="save_button">Save</button>
+                <button class="btn btn--secondary" onclick="resetSettingsFromMenu()" data-i18n="revert_button">Revert</button>
+                <button class="btn" onclick="closeSettings()" data-i18n="back_button">Back</button>
             </div>
         </div>
     </div>
@@ -60,11 +67,11 @@
             <div class="game-header">
                 <div class="score-section">
                     <div class="score-item">
-                        <div class="score-label">Score</div>
+                        <div class="score-label" data-i18n="score_label">Score</div>
                         <div class="score-value" id="score">0</div>
                     </div>
                     <div class="score-item">
-                        <div class="score-label">Best</div>
+                        <div class="score-label" data-i18n="best_label">Best</div>
                         <div class="score-value" id="bestScore">0</div>
                     </div>
                 </div>
@@ -73,12 +80,12 @@
                     <div class="crystals-display">
                         <span class="crystal-icon">💎</span>
                         <span id="crystalCount">3</span>
-                        <span class="crystal-label">Time Crystals</span>
+                        <span class="crystal-label" data-i18n="time_crystals_label">Time Crystals</span>
                     </div>
                     <div class="void-display">
                         <span class="void-icon">🗑️</span>
                         <span id="deleteCount">0</span>
-                        <span class="void-label">Void Crystals</span>
+                        <span class="void-label" data-i18n="void_crystals_label">Void Crystals</span>
                     </div>
                 </div>
             </div>
@@ -86,13 +93,13 @@
             <!-- Controls -->
             <div class="controls-section">
                 <div class="action-controls">
-                    <button class="btn btn--outline" id="rewindButton" onclick="rewindTime()">
+                    <button class="btn btn--outline" id="rewindButton" onclick="rewindTime()" data-i18n="rewind_button">
                         ⏰ Rewind
                     </button>
-                    <button class="btn btn--outline" id="deleteModeButton" onclick="enterDeleteMode()">
+                    <button class="btn btn--outline" id="deleteModeButton" onclick="enterDeleteMode()" data-i18n="delete_button">
                         🗑️ Delete
                     </button>
-                    <button class="btn btn--outline" onclick="newGame()">
+                    <button class="btn btn--outline" onclick="newGame()" data-i18n="new_game_button">
                         🔄 New Game
                     </button>
                 </div>
@@ -108,7 +115,7 @@
 
             <!-- Color Guide -->
             <div class="color-guide">
-                <h4>Evolution Path</h4>
+                <h4 data-i18n="evolution_path_heading">Evolution Path</h4>
                 <div class="color-tiles">
                     <div class="color-tile" style="background: #ff6b6b;">2</div>
                     <div class="color-tile" style="background: #ffa726;">4</div>
@@ -128,17 +135,17 @@
     <!-- Game Over Screen -->
     <div id="gameOverScreen" class="screen game-over-screen hidden">
         <div class="game-over-content">
-            <h2 class="game-over-title">Quantum Journey Complete!</h2>
+            <h2 class="game-over-title" data-i18n="game_over_title">Quantum Journey Complete!</h2>
             <div class="final-score">
-                <div class="score-label">Final Score</div>
+                <div class="score-label" data-i18n="final_score_label">Final Score</div>
                 <div class="score-value" id="finalScore">0</div>
             </div>
             <div class="achievements" id="achievements"></div>
             <div class="game-over-actions">
-                <button class="btn btn--primary btn--lg" onclick="newGame()">
+                <button class="btn btn--primary btn--lg" onclick="newGame()" data-i18n="play_again_button">
                     Play Again
                 </button>
-                <button class="btn btn--secondary" onclick="showStartScreen()">
+                <button class="btn btn--secondary" onclick="showStartScreen()" data-i18n="main_menu_button">
                     Main Menu
                 </button>
             </div>
