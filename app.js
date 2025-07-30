@@ -1310,9 +1310,10 @@ function handleTouchEnd(e) {
     return null;
 }
 
-document.addEventListener('touchstart', handleTouchStart, { passive: false });
-document.addEventListener('touchmove', handleTouchMove, { passive: false });
-document.addEventListener('touchend', handleTouchEnd, { passive: false });
+// Attach touch listeners only to the game board so other UI controls remain
+// responsive to taps on mobile devices.
+// These listeners are registered after the DOM content is loaded when the board
+// element is available.
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -1320,6 +1321,9 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTranslations();
     const board = document.getElementById('gameBoard');
     board.addEventListener('click', handleBoardClick);
+    board.addEventListener('touchstart', handleTouchStart, { passive: false });
+    board.addEventListener('touchmove', handleTouchMove, { passive: false });
+    board.addEventListener('touchend', handleTouchEnd, { passive: false });
 });
 
 // Expose functions for the browser UI
