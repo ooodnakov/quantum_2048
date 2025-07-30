@@ -2,6 +2,7 @@
 const DEFAULT_SETTINGS = {
     boardSize: 6,
     startingCrystals: 3,
+    startingVoidCrystals: 0,
     startingTiles: 2,
     quantumBonusChance: 0.3,
     maxMoveHistory: 3,
@@ -19,6 +20,7 @@ let gameState = {
     score: 0,
     bestScore: 0,
     crystals: settings.startingCrystals,
+    voidCrystals: settings.startingVoidCrystals,
     gravity: 'south', // north, east, south, west
     moveHistory: [],
     gameActive: false,
@@ -26,7 +28,9 @@ let gameState = {
     lastAdded: null,
     gravityRandomizeNext: false,
     echoPairs: new Map(),
-    clearRowFlag: false
+    clearRowFlag: false,
+    highestTile: 0,
+    deleteMode: false
 };
 
 // Queue for storing pending move directions when a move is already in progress
@@ -219,6 +223,8 @@ function initGame() {
     gameState.lastAdded = null;
     gameState.score = 0;
     gameState.crystals = settings.startingCrystals;
+    gameState.voidCrystals = settings.startingVoidCrystals;
+    gameState.highestTile = 0;
     gameState.gravity = 'south';
     gameState.moveHistory = [];
     gameState.gameActive = true;
@@ -226,6 +232,7 @@ function initGame() {
     // Add initial tiles based on configured startingTiles setting
     // Each starting tile increases in value
     addProgressiveTiles(settings.startingTiles);
+    gameState.highestTile = getMaxTile(gameState.board);
     
     updateDisplay();
     renderBoard();
@@ -346,6 +353,11 @@ function renderBoard(merged = [], movedTiles = [], quantumTiles = []) {
                 const isPredefinedColor = Object.prototype.hasOwnProperty.call(TILE_COLORS, value);
                 tileElement.style.backgroundColor = getTileColor(value);
 
+                const type = gameState.board[r][c].type;
+                if (type && type !== 'normal') {
+                    tileElement.classList.add(type);
+                }
+
                 // Ensure text is readable for generated colors
                 if (!isPredefinedColor) {
                     tileElement.style.color = '#fff';
@@ -420,11 +432,15 @@ function updateDisplay() {
     document.getElementById('score').textContent = formatScoreDisplay(gameState.score);
     document.getElementById('bestScore').textContent = formatScoreDisplay(gameState.bestScore);
     document.getElementById('crystalCount').textContent = gameState.crystals;
+    const deleteCountEl = document.getElementById('deleteCount');
+    if (deleteCountEl) deleteCountEl.textContent = gameState.voidCrystals;
     document.getElementById('gravityArrow').textContent = GRAVITY_ARROWS[gameState.gravity];
-    
+
     // Update rewind button state
     const rewindButton = document.getElementById('rewindButton');
     rewindButton.disabled = gameState.crystals === 0 || gameState.moveHistory.length === 0;
+    const deleteButton = document.getElementById('deleteModeButton');
+    if (deleteButton) deleteButton.disabled = gameState.voidCrystals === 0;
 }
 
 // Rotate gravity
@@ -512,6 +528,45 @@ function rewindTime() {
             gameState.gameActive = true;
         }, 250);
         createParticleEffect('time');
+    }
+}
+
+function deleteTileAt(r, c) {
+    if (gameState.voidCrystals <= 0) return false;
+    if (r < 0 || r >= settings.boardSize || c < 0 || c >= settings.boardSize) return false;
+    const tileValue = gameState.board[r][c].value;
+    if (tileValue === 0) return false;
+    gameState.board[r][c] = createTile();
+    gameState.voidCrystals -= 1;
+    if (tileValue === gameState.highestTile) {
+        gameState.highestTile = getMaxTile(gameState.board);
+    }
+    updateDisplay();
+    renderBoard();
+    return true;
+}
+
+function enterDeleteMode() {
+    if (gameState.voidCrystals === 0) return;
+    gameState.deleteMode = true;
+    const board = document.getElementById('gameBoard');
+    board.classList.add('delete-mode');
+}
+
+function handleBoardClick(e) {
+    if (!gameState.deleteMode) return;
+    const tileElement = e.target.closest('.tile');
+    if (!tileElement) return;
+    const board = document.getElementById('gameBoard');
+    const tiles = Array.from(board.children);
+    const index = tiles.indexOf(tileElement);
+    if (index === -1) return;
+    const r = Math.floor(index / settings.boardSize);
+    const c = index % settings.boardSize;
+    const success = deleteTileAt(r, c);
+    if (success) {
+        gameState.deleteMode = false;
+        board.classList.remove('delete-mode');
     }
 }
 
@@ -800,16 +855,25 @@ function checkAchievements() {
             showAchievement(`Reached ${achievement.tile}! +${achievement.crystals_reward} Time Crystal${achievement.crystals_reward > 1 ? 's' : ''}!`);
         }
     });
+
+    if (maxTile > gameState.highestTile) {
+        if (gameState.highestTile > 0) {
+            gameState.voidCrystals += 1;
+            showAchievement(`New max tile ${maxTile}! +1 Void Crystal!`);
+        }
+        gameState.highestTile = maxTile;
+    }
 }
 
 // Show achievement popup
 function showAchievement(text) {
     const popup = document.getElementById('achievementPopup');
     const textElement = document.getElementById('achievementText');
-    
+    if (!popup || !textElement) return;
+
     textElement.textContent = text;
     popup.classList.remove('hidden');
-    
+
     setTimeout(() => {
         popup.classList.add('hidden');
     }, 3000);
@@ -1108,6 +1172,8 @@ document.addEventListener('touchend', handleTouchEnd, { passive: false });
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     updateDisplay();
+    const board = document.getElementById('gameBoard');
+    board.addEventListener('click', handleBoardClick);
 });
 
 // Expose functions for the browser UI
@@ -1161,6 +1227,9 @@ if (typeof module !== 'undefined' && module.exports) {
         performQuantumJumps,
         updateScore,
         updateDisplay,
-        formatScoreDisplay
+        formatScoreDisplay,
+        deleteTileAt,
+        enterDeleteMode,
+        handleBoardClick
     };
 }
