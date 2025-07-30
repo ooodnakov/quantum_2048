@@ -16,8 +16,9 @@ function setupDom() {
 beforeEach(() => {
   setupDom();
   gameState.board = Array.from({ length: settings.boardSize }, () => (
-    Array.from({ length: settings.boardSize }, () => ({ id: null, value: 0 }))
+    Array.from({ length: settings.boardSize }, () => ({ id: null, value: 0, type: 'normal' }))
   ));
+  gameState.nextId = 1;
   gameState.gameActive = true;
   jest.useFakeTimers();
 });
@@ -28,9 +29,9 @@ afterEach(() => {
 });
 
 test('triple identical tiles merge into one pair without loss', () => {
-  gameState.board[0][0].value = 2;
-  gameState.board[0][1].value = 2;
-  gameState.board[0][2].value = 2;
+  gameState.board[0][0] = { id: gameState.nextId++, value: 2, type: 'normal' };
+  gameState.board[0][1] = { id: gameState.nextId++, value: 2, type: 'normal' };
+  gameState.board[0][2] = { id: gameState.nextId++, value: 2, type: 'normal' };
   jest.spyOn(Math, 'random').mockReturnValue(0);
 
   move('left');
@@ -41,10 +42,10 @@ test('triple identical tiles merge into one pair without loss', () => {
 });
 
 test('four identical tiles merge into two pairs', () => {
-  gameState.board[0][0].value = 2;
-  gameState.board[0][1].value = 2;
-  gameState.board[0][2].value = 2;
-  gameState.board[0][3].value = 2;
+  gameState.board[0][0] = { id: gameState.nextId++, value: 2, type: 'normal' };
+  gameState.board[0][1] = { id: gameState.nextId++, value: 2, type: 'normal' };
+  gameState.board[0][2] = { id: gameState.nextId++, value: 2, type: 'normal' };
+  gameState.board[0][3] = { id: gameState.nextId++, value: 2, type: 'normal' };
   jest.spyOn(Math, 'random').mockReturnValue(0);
 
   move('left');
