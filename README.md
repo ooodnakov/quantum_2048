@@ -4,6 +4,7 @@ Quantum 2048: An Innovative 2048 Game with Multiple Creative Twists
 * Gravity Physics System - Players can rotate gravity in four directions (up, down, left, right), causing tiles to fall and slide in completely new ways. This transforms the traditional 2048 strategy by adding a spatial dimension where players must think about how gravity affects tile movement
 
 * Time Manipulation Mechanics - The game includes "time crystals" that allow players to rewind their last few moves when stuck. This addresses one of the main frustrations in traditional 2048 while adding a resource management element
+* Void Crystals - Earned whenever you reach a new maximum tile, these can be spent to delete any tile on the board
 
 * Color Evolution System - through beautiful color stages (red→orange→yellow→green→blue→purple→pink→white), making the game more visually engaging and easier to track progression
 * Generative Colors - tiles beyond 1024 automatically get unique hues

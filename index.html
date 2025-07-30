@@ -19,6 +19,7 @@
                     <li>🎯 Use arrow keys to move tiles in the current gravity direction</li>
                     <li>🌀 Press SPACE to rotate gravity and make tiles fall in new directions</li>
                     <li>⏰ Press R to rewind time (uses time crystals)</li>
+                    <li>🗑️ Use Delete to remove a tile (costs void crystals)</li>
                     <li>✨ Diagonal twins might quantum jump together after a move</li>
                     <li>📈 How high can you go? Merge tiles to set a new record!</li>
                 </ul>
@@ -75,6 +76,11 @@
                         <span id="crystalCount">3</span>
                         <span class="crystal-label">Time Crystals</span>
                     </div>
+                    <div class="void-display">
+                        <span class="void-icon">🗑️</span>
+                        <span id="deleteCount">0</span>
+                        <span class="void-label">Void Crystals</span>
+                    </div>
                 </div>
             </div>
 
@@ -93,6 +99,9 @@
                 <div class="action-controls">
                     <button class="btn btn--outline" id="rewindButton" onclick="rewindTime()">
                         ⏰ Rewind
+                    </button>
+                    <button class="btn btn--outline" id="deleteModeButton" onclick="enterDeleteMode()">
+                        🗑️ Delete
                     </button>
                     <button class="btn btn--outline" onclick="newGame()">
                         🔄 New Game
