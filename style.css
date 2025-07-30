@@ -946,31 +946,6 @@ body {
     gap: var(--space-16);
 }
 
-.gravity-control {
-    display: flex;
-    align-items: center;
-    gap: var(--space-12);
-}
-
-.gravity-indicator {
-    display: flex;
-    align-items: center;
-    gap: var(--space-8);
-    background: var(--color-surface);
-    padding: var(--space-8) var(--space-12);
-    border-radius: var(--radius-base);
-    border: 1px solid var(--color-card-border);
-}
-
-.gravity-label {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-}
-
-.gravity-arrow {
-    font-size: var(--font-size-lg);
-    transition: transform var(--duration-normal) var(--ease-standard);
-}
 
 .action-controls {
     display: flex;
@@ -1313,7 +1288,6 @@ body {
         align-items: stretch;
     }
     
-    .gravity-control,
     .action-controls {
         justify-content: center;
     }
@@ -1378,15 +1352,3 @@ body {
 .game-screen.level-6 { background: linear-gradient(135deg, var(--color-bg-6), var(--color-bg-7)); }
 .game-screen.level-7 { background: linear-gradient(135deg, var(--color-bg-7), var(--color-bg-8)); }
 .game-screen.level-8 { background: linear-gradient(135deg, var(--color-bg-8), var(--color-bg-1)); }
-
-.game-board.wobble {
-    animation: gravity-wobble 0.5s cubic-bezier(.25,.8,.25,1);
-}
-
-@keyframes gravity-wobble {
-    0% { transform: rotate(0deg); }
-    25% { transform: rotate(-2deg); }
-    50% { transform: rotate(2deg); }
-    75% { transform: rotate(-1deg); }
-    100% { transform: rotate(0deg); }
-}

@@ -1,7 +1,6 @@
 Quantum 2048: An Innovative 2048 Game with Multiple Creative Twists
 
 
-* Gravity Physics System - Players can rotate gravity in four directions (up, down, left, right), causing tiles to fall and slide in completely new ways. This transforms the traditional 2048 strategy by adding a spatial dimension where players must think about how gravity affects tile movement
 
 * Time Manipulation Mechanics - The game includes "time crystals" that allow players to rewind their last few moves when stuck. This addresses one of the main frustrations in traditional 2048 while adding a resource management element
 * Void Crystals - Earned whenever you reach a new maximum tile, these can be spent to delete any tile on the board
@@ -19,13 +18,13 @@ The game incorporates several 2024 gaming trends, including minimalist design wi
 , particle animations for satisfying feedback, dynamic backgrounds that change based on achievement level, and responsive controls that work seamlessly on both desktop and mobile devices
 In particular, swipe gestures on touch screens allow smooth play on phones and tablets.
 
-The innovative combination of physics manipulation, temporal mechanics, and visual evolution creates a familiar yet fresh experience that maintains the addictive core of 2048 while offering entirely new strategic possibilities. Players must now consider not just tile positioning, but also gravity direction, time management, and color harmony - transforming a simple sliding puzzle into a multi-dimensional strategic challenge.
+The innovative combination of temporal mechanics, and visual evolution creates a familiar yet fresh experience that maintains the addictive core of 2048 while offering entirely new strategic possibilities. Players must now consider not just tile positioning, but also time management and color harmony - transforming a simple sliding puzzle into a multi-dimensional strategic challenge.
 
 ## Experimental Block Types
 
 The design also introduces several advanced tile behaviors:
 
-* **Phase Shift Block** – Randomly phases in and out of existence every few turns. When intangible, other tiles can move through it. Merging while active scrambles gravity for the next move.
+* **Phase Shift Block** – Randomly phases in and out of existence every few turns. When intangible, other tiles can move through it.
 * **Echo Duplicate Block** – Spawns with a temporary "echo" copy elsewhere on the board. Merging with either instance grants a time crystal and removes the echo; ignoring it causes the copy to fade and deduct points.
 * **Nexus Portal Block** – Functions as a wormhole, teleporting tiles that slide into it to the opposite side. Linking two portals through a merge can trigger chain reactions, but excessive use may purge a random row.
 
