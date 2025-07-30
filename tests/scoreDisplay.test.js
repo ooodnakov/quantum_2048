@@ -3,7 +3,6 @@ const setupDom = () => {
     <div id="score"></div>
     <div id="bestScore"></div>
     <div id="crystalCount"></div>
-    <div id="gravityArrow"></div>
     <button id="rewindButton"></button>
     <div id="gameBoard"></div>
   `;

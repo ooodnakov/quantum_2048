@@ -12,7 +12,6 @@ function setupDom() {
     <div id="score"></div>
     <div id="bestScore"></div>
     <div id="crystalCount"></div>
-    <div id="gravityArrow"></div>
     <button id="rewindButton"></button>
     <div id="gameBoard"></div>
     <div id="gameScreen"></div>
@@ -26,7 +25,6 @@ beforeEach(() => {
     Array.from({ length: settings.boardSize }, () => ({ id: null, value: 0 }))
   ));
   gameState.gameActive = true;
-  gameState.gravity = 'south';
   gameState.crystals = 0;
   gameState.echoPairs.clear();
 });

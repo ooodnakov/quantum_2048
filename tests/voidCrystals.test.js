@@ -6,7 +6,6 @@ function setupDom() {
     <div id="bestScore"></div>
     <div id="crystalCount"></div>
     <div id="deleteCount"></div>
-    <div id="gravityArrow"></div>
     <button id="rewindButton"></button>
     <button id="deleteModeButton"></button>
     <div id="gameBoard"></div>
