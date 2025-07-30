@@ -1,4 +1,4 @@
-const { getTileColor, formatNumber, TILE_COLORS } = require('./app.js');
+const { getTileColor, formatNumber, TILE_COLORS } = require('../app.js');
 
 describe('getTileColor', () => {
   test('returns predefined colors without modifying table', () => {
