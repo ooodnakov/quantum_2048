@@ -1,4 +1,4 @@
-const { gameState, move, settings, spawnPhaseShiftTile, spawnEchoDuplicateTile, spawnNexusPortalTile } = require('../app.js');
+const { gameState, move, settings, spawnEchoDuplicateTile, spawnNexusPortalTile } = require('../app.js');
 
 function setupDom() {
   document.body.innerHTML = `
@@ -20,7 +20,6 @@ beforeEach(() => {
   ));
   gameState.gameActive = true;
   gameState.crystals = 0;
-  gameState.gravity = 'south';
   gameState.echoPairs.clear();
 });
 
