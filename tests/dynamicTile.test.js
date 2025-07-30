@@ -1,4 +1,4 @@
-const { gameState, addRandomTile, getMaxTile, settings, processRow } = require('../app.js');
+const { gameState, addRandomTile, getMaxTile, settings, performQuantumJumps } = require('../app.js');
 
 beforeEach(() => {
   gameState.board = Array.from({ length: settings.boardSize }, () => (
@@ -25,17 +25,13 @@ test('boardSize reflects expanded grid', () => {
   expect(settings.boardSize).toBe(6);
 });
 
-test('quantum bonus records jump positions', () => {
-  const row = [
-    { id: 1, value: 2 },
-    { id: 2, value: 2 },
-    { id: null, value: 0 },
-    { id: null, value: 0 },
-    { id: null, value: 0 },
-    { id: null, value: 0 }
-  ];
-  jest.spyOn(Math, 'random').mockReturnValue(0); // ensure bonus
-  const result = processRow(row);
-  expect(result.quantumJumps).toEqual([0]);
+test('quantum jumps merge diagonal tiles', () => {
+  gameState.board[0][0].value = 2;
+  gameState.board[1][1].value = 2;
+  jest.spyOn(Math, 'random').mockReturnValue(0); // always merge and choose first
+  const result = performQuantumJumps();
+  expect(gameState.board[0][0].value).toBe(4);
+  expect(gameState.board[1][1].value).toBe(0);
+  expect(result.quantumPositions).toEqual([{ r: 0, c: 0 }]);
   Math.random.mockRestore();
 });

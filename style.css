@@ -1065,6 +1065,12 @@ body {
     animation: moveTile var(--duration-normal) var(--ease-standard);
 }
 
+.tile.move.quantum-jump {
+    animation:
+        moveTile var(--duration-normal) var(--ease-standard),
+        quantumJump var(--duration-normal) var(--ease-standard);
+}
+
 @keyframes tileMerge {
     0% {
         transform: scale(1);
