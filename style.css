@@ -1001,6 +1001,25 @@ body {
 .tile.tile-512 { background: gold; color: #333; }
 .tile.tile-1024 { background: #e5e4e2; color: #111; }
 
+/* Experimental tile styles */
+.tile.phase {
+    box-shadow: 0 0 0 3px var(--color-warning);
+    animation: phaseBlink 1s steps(2, start) infinite;
+}
+
+.tile.echo {
+    box-shadow: 0 0 0 3px var(--color-info);
+}
+
+.tile.portal {
+    box-shadow: 0 0 0 3px var(--color-success);
+    border-radius: var(--radius-full);
+}
+
+@keyframes phaseBlink {
+    50% { opacity: 0.4; }
+}
+
 .tile.quantum {
     position: relative;
     animation: quantumPulseScale 2s infinite cubic-bezier(0.4, 0, 0.6, 1);

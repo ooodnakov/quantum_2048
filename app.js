@@ -338,6 +338,11 @@ function renderBoard(merged = [], movedTiles = [], quantumTiles = []) {
                 const isPredefinedColor = Object.prototype.hasOwnProperty.call(TILE_COLORS, value);
                 tileElement.style.backgroundColor = getTileColor(value);
 
+                const type = gameState.board[r][c].type;
+                if (type && type !== 'normal') {
+                    tileElement.classList.add(type);
+                }
+
                 // Ensure text is readable for generated colors
                 if (!isPredefinedColor) {
                     tileElement.style.color = '#fff';
