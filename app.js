@@ -28,25 +28,11 @@ let gameState = {
     echoPairs: new Map(),
     clearRowFlag: false,
     highestTile: 0,
-    deleteMode: false,
-    gravity: 'south',
-    gravityChangeNext: false
+    deleteMode: false
 };
 
 // Queue for storing pending move directions when a move is already in progress
 const moveQueue = [];
-
-const GRAVITY_DIRECTIONS = ['north', 'east', 'south', 'west'];
-
-function applyGravityToDirection(direction) {
-    const directions = ['up', 'right', 'down', 'left'];
-    const indexMap = { up: 0, right: 1, down: 2, left: 3 };
-    const rotationMap = { south: 0, east: 1, north: 2, west: 3 };
-    const idx = indexMap[direction];
-    if (idx === undefined) return direction;
-    const rotation = rotationMap[gameState.gravity] || 0;
-    return directions[(idx + rotation) % 4];
-}
 
 // Game configuration
 const TILE_COLORS = {
@@ -451,8 +437,6 @@ function updateDisplay() {
     const deleteButton = document.getElementById('deleteModeButton');
     if (deleteButton) deleteButton.disabled = gameState.voidCrystals === 0;
 
-    const gravityArrow = document.getElementById('gravityArrow');
-    if (gravityArrow) gravityArrow.textContent = gameState.gravity;
 }
 
 
@@ -575,15 +559,10 @@ function getMoveDirection(key) {
 
 // Move tiles
 function move(direction) {
-    direction = applyGravityToDirection(direction);
 
     updatePhaseTiles();
     updateEchoPairs();
 
-    if (gameState.gravityChangeNext) {
-        gameState.gravity = GRAVITY_DIRECTIONS[Math.floor(Math.random() * GRAVITY_DIRECTIONS.length)];
-        gameState.gravityChangeNext = false;
-    }
 
     if (!gameState.gameActive) {
         moveQueue.push(direction);
@@ -806,9 +785,7 @@ function baseProcessRow(row, targetLength) {
                 gameState.clearRowFlag = true;
             }
 
-            if (left.type === 'phase' || right.type === 'phase') {
-                gameState.gravityChangeNext = true;
-            }
+
 
             score += gained;
             newRow.splice(i + 1, 1);
@@ -1282,7 +1259,6 @@ if (typeof module !== 'undefined' && module.exports) {
         formatScoreDisplay,
         deleteTileAt,
         enterDeleteMode,
-        handleBoardClick,
-        applyGravityToDirection
+        handleBoardClick
     };
 }
