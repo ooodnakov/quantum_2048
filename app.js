@@ -21,12 +21,10 @@ let gameState = {
     bestScore: 0,
     crystals: settings.startingCrystals,
     voidCrystals: settings.startingVoidCrystals,
-    gravity: 'south', // north, east, south, west
     moveHistory: [],
     gameActive: false,
     nextId: 1,
     lastAdded: null,
-    gravityRandomizeNext: false,
     echoPairs: new Map(),
     clearRowFlag: false,
     highestTile: 0,
@@ -141,12 +139,6 @@ function updateScore(gained) {
     }
 }
 
-const GRAVITY_ARROWS = {
-    north: '⬆️',
-    east: '➡️',
-    south: '⬇️',
-    west: '⬅️'
-};
 
 const QUANTUM_COMBINATIONS = [
     {colors: ['#ff6b6b', '#66bb6a'], bonus: 2}, // red + green
@@ -225,7 +217,6 @@ function initGame() {
     gameState.crystals = settings.startingCrystals;
     gameState.voidCrystals = settings.startingVoidCrystals;
     gameState.highestTile = 0;
-    gameState.gravity = 'south';
     gameState.moveHistory = [];
     gameState.gameActive = true;
     
@@ -434,7 +425,6 @@ function updateDisplay() {
     document.getElementById('crystalCount').textContent = gameState.crystals;
     const deleteCountEl = document.getElementById('deleteCount');
     if (deleteCountEl) deleteCountEl.textContent = gameState.voidCrystals;
-    document.getElementById('gravityArrow').textContent = GRAVITY_ARROWS[gameState.gravity];
 
     // Update rewind button state
     const rewindButton = document.getElementById('rewindButton');
@@ -443,27 +433,6 @@ function updateDisplay() {
     if (deleteButton) deleteButton.disabled = gameState.voidCrystals === 0;
 }
 
-// Rotate gravity
-function rotateGravity() {
-    const gravityOrder = ['north', 'east', 'south', 'west'];
-    const currentIndex = gravityOrder.indexOf(gameState.gravity);
-    gameState.gravity = gravityOrder[(currentIndex + 1) % 4];
-    
-    // Animate gravity arrow rotation
-    const gravityArrow = document.getElementById('gravityArrow');
-    gravityArrow.style.transform = 'rotate(90deg)';
-    setTimeout(() => {
-        gravityArrow.style.transform = 'rotate(0deg)';
-        updateDisplay();
-    }, 150);
-
-    // Add wobble effect to the board
-    const boardElement = document.getElementById('gameBoard');
-    boardElement.classList.add('wobble');
-    boardElement.addEventListener('animationend', () => {
-        boardElement.classList.remove('wobble');
-    }, { once: true });
-}
 
 // Save game state for rewind
 function saveGameState() {
@@ -570,25 +539,20 @@ function handleBoardClick(e) {
     }
 }
 
-// Get move direction based on current gravity
+// Map arrow keys to move directions
 function getMoveDirection(key) {
-    const gravityMoves = {
-        north: { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' },
-        east: { ArrowUp: 'left', ArrowDown: 'right', ArrowLeft: 'up', ArrowRight: 'down' },
-        south: { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' },
-        west: { ArrowUp: 'right', ArrowDown: 'left', ArrowLeft: 'up', ArrowRight: 'down' }
+    const map = {
+        ArrowUp: 'up',
+        ArrowDown: 'down',
+        ArrowLeft: 'left',
+        ArrowRight: 'right'
     };
-    
-    return gravityMoves[gameState.gravity][key];
+
+    return map[key];
 }
 
 // Move tiles
 function move(direction) {
-    if (gameState.gravityRandomizeNext) {
-        const dirs = ['north', 'east', 'south', 'west'];
-        gameState.gravity = dirs[Math.floor(Math.random() * dirs.length)];
-        gameState.gravityRandomizeNext = false;
-    }
 
     updateEchoPairs();
 
@@ -800,10 +764,6 @@ function processRow(row) {
             const right = newRow[i + 1];
             newRow[i] = { ...left, value: left.value * 2, type: 'normal' };
             let gained = newRow[i].value;
-
-            if (left.type === 'phase' || right.type === 'phase') {
-                gameState.gravityRandomizeNext = true;
-            }
 
             // Echo duplicate handling
             for (const [origId, pair] of gameState.echoPairs.entries()) {
@@ -1103,10 +1063,7 @@ function resetSettingsFromMenu() {
 document.addEventListener('keydown', (e) => {
     if (!gameState.gameActive) return;
     
-    if (e.key === ' ') {
-        e.preventDefault();
-        rotateGravity();
-    } else if (e.key === 'r' || e.key === 'R') {
+    if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         rewindTime();
     } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -1153,14 +1110,8 @@ function handleTouchEnd(e) {
             direction = deltaY > 0 ? 'down' : 'up';
         }
         
-        // Transform direction based on gravity
-        const gravityKey = direction === 'up' ? 'ArrowUp' : 
-                          direction === 'down' ? 'ArrowDown' :
-                          direction === 'left' ? 'ArrowLeft' : 'ArrowRight';
-        
-        const finalDirection = getMoveDirection(gravityKey);
-        move(finalDirection);
-        return finalDirection;
+        move(direction);
+        return direction;
     }
     return null;
 }
@@ -1181,7 +1132,6 @@ if (typeof window !== 'undefined') {
     window.startGame = startGame;
     window.showStartScreen = showStartScreen;
     window.newGame = newGame;
-    window.rotateGravity = rotateGravity;
     window.rewindTime = rewindTime;
     window.openSettings = openSettings;
     window.closeSettings = closeSettings;
