@@ -112,7 +112,8 @@ function formatNumber(num) {
 function formatScoreDisplay(num) {
     const short = formatNumber(num);
     const full = num.toLocaleString();
-    return short === full ? full : `${full} (${short})`;
+    // If formatNumber didn't abbreviate the value, just return the locale string
+    return short === String(num) ? full : `${full} (${short})`;
 }
 
 // Find the highest tile on the board without flattening the array

@@ -31,3 +31,12 @@ test('updateDisplay shows raw numbers for small scores', () => {
   expect(document.getElementById('score').textContent).toBe('512');
   expect(document.getElementById('bestScore').textContent).toBe('256');
 });
+
+test('updateDisplay shows formatted numbers for scores between 1,000 and 9,999', () => {
+  const app = require('../app.js');
+  app.gameState.score = 1234;
+  app.gameState.bestScore = 9999;
+  app.updateDisplay();
+  expect(document.getElementById('score').textContent).toBe('1,234');
+  expect(document.getElementById('bestScore').textContent).toBe('9,999');
+});
