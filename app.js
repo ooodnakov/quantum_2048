@@ -28,11 +28,15 @@ let gameState = {
     echoPairs: new Map(),
     clearRowFlag: false,
     highestTile: 0,
-    deleteMode: false
+    deleteMode: false,
+    gravity: 'south',
+    gravityChangeNext: false
 };
 
 // Queue for storing pending move directions when a move is already in progress
 const moveQueue = [];
+
+const GRAVITY_DIRECTIONS = ['north', 'east', 'south', 'west'];
 
 // Game configuration
 const TILE_COLORS = {
@@ -431,6 +435,9 @@ function updateDisplay() {
     rewindButton.disabled = gameState.crystals === 0 || gameState.moveHistory.length === 0;
     const deleteButton = document.getElementById('deleteModeButton');
     if (deleteButton) deleteButton.disabled = gameState.voidCrystals === 0;
+
+    const gravityArrow = document.getElementById('gravityArrow');
+    if (gravityArrow) gravityArrow.textContent = gameState.gravity;
 }
 
 
@@ -556,6 +563,11 @@ function move(direction) {
 
     updatePhaseTiles();
     updateEchoPairs();
+
+    if (gameState.gravityChangeNext) {
+        gameState.gravity = GRAVITY_DIRECTIONS[Math.floor(Math.random() * GRAVITY_DIRECTIONS.length)];
+        gameState.gravityChangeNext = false;
+    }
 
     if (!gameState.gameActive) {
         moveQueue.push(direction);
@@ -776,6 +788,10 @@ function baseProcessRow(row, targetLength) {
 
             if (left.type === 'portal' && right.type === 'portal') {
                 gameState.clearRowFlag = true;
+            }
+
+            if (left.type === 'phase' || right.type === 'phase') {
+                gameState.gravityChangeNext = true;
             }
 
             score += gained;
