@@ -1,4 +1,11 @@
-const { gameState, settings, renderBoard, spawnPhaseShiftTile, spawnEchoDuplicateTile, spawnNexusPortalTile } = require('../app.js');
+const {
+  gameState,
+  settings,
+  renderBoard,
+  spawnPhaseShiftTile,
+  spawnEchoDuplicateTile,
+  spawnNexusPortalTile
+} = require('../app.js');
 
 function setupDom() {
   document.body.innerHTML = `
@@ -19,23 +26,15 @@ beforeEach(() => {
   gameState.gameActive = true;
 });
 
-test('phase shift tiles use phase class', () => {
-  spawnPhaseShiftTile(0, 0, 2);
-  renderBoard();
-  const tile = document.getElementById('gameBoard').children[0];
-  expect(tile.classList.contains('phase')).toBe(true);
-});
+const cases = [
+  ['phase shift', spawnPhaseShiftTile, 'phase'],
+  ['echo duplicate', spawnEchoDuplicateTile, 'echo'],
+  ['nexus portal', spawnNexusPortalTile, 'portal']
+];
 
-test('echo duplicate tiles use echo class', () => {
-  spawnEchoDuplicateTile(0, 0, 2);
+test.each(cases)('%s tiles use %s class', (_name, spawnFn, className) => {
+  spawnFn(0, 0, 2);
   renderBoard();
   const tile = document.getElementById('gameBoard').children[0];
-  expect(tile.classList.contains('echo')).toBe(true);
-});
-
-test('nexus portal tiles use portal class', () => {
-  spawnNexusPortalTile(0, 0, 2);
-  renderBoard();
-  const tile = document.getElementById('gameBoard').children[0];
-  expect(tile.classList.contains('portal')).toBe(true);
+  expect(tile.classList.contains(className)).toBe(true);
 });
