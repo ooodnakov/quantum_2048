@@ -108,6 +108,13 @@ function formatNumber(num) {
     return `${value}${suffix}`;
 }
 
+// Format score display to include a short form when applicable
+function formatScoreDisplay(num) {
+    const short = formatNumber(num);
+    const full = num.toLocaleString();
+    return short === full ? full : `${full} (${short})`;
+}
+
 // Find the highest tile on the board without flattening the array
 function getMaxTile(board) {
     let max = 0;
@@ -409,8 +416,8 @@ function isComplementaryColor(color1, color2) {
 
 // Update display
 function updateDisplay() {
-    document.getElementById('score').textContent = gameState.score;
-    document.getElementById('bestScore').textContent = gameState.bestScore;
+    document.getElementById('score').textContent = formatScoreDisplay(gameState.score);
+    document.getElementById('bestScore').textContent = formatScoreDisplay(gameState.bestScore);
     document.getElementById('crystalCount').textContent = gameState.crystals;
     document.getElementById('gravityArrow').textContent = GRAVITY_ARROWS[gameState.gravity];
     
@@ -949,7 +956,7 @@ function isGameOver() {
 // End game
 function endGame() {
     gameState.gameActive = false;
-    document.getElementById('finalScore').textContent = gameState.score;
+    document.getElementById('finalScore').textContent = formatScoreDisplay(gameState.score);
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.remove('hidden');
     
@@ -1151,6 +1158,8 @@ if (typeof module !== 'undefined' && module.exports) {
         spawnEchoDuplicateTile,
         spawnNexusPortalTile,
         performQuantumJumps,
-        updateScore
+        updateScore,
+        updateDisplay,
+        formatScoreDisplay
     };
 }
