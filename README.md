@@ -10,7 +10,7 @@ Quantum 2048: An Innovative 2048 Game with Multiple Creative Twists
 * Abbreviated Tile Values - numbers over 10,000 display as 10k, 1m, 1b and so on
 * Configurable Starting Tiles - choose how many progressively larger tiles appear when a new game begins (input is clamped to board size)
 
-* Quantum Bonuses - When complementary colors merge (like red+green or blue+orange), they create special "quantum tiles" worth double points, adding an extra strategic layer that rewards color theory knowledge
+* Quantum Jumps - After each move, any pair of diagonally adjacent tiles with the same value may instantly merge into one tile, adding unexpected combos and flashy animations
 
 * Modern Game Design Elements
 

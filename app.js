@@ -119,6 +119,16 @@ function getMaxTile(board) {
     return max;
 }
 
+// Update the total and best scores
+function updateScore(gained) {
+    if (gained <= 0) return;
+    gameState.score += gained;
+    if (gameState.score > gameState.bestScore) {
+        gameState.bestScore = gameState.score;
+        localStorage.setItem('quantum2048_best', gameState.bestScore.toString());
+    }
+}
+
 const GRAVITY_ARROWS = {
     north: '⬆️',
     east: '➡️',
@@ -532,7 +542,6 @@ function move(direction) {
     const newBoard = gameState.board.map(row => row.map(cell => ({ ...cell })));
     const mergePositionsTransformed = [];
     const mergesByRow = Array.from({ length: settings.boardSize }, () => []);
-    const quantumPositionsTransformed = [];
     const removedEchoIds = [];
     
     // Transform board based on direction for easier processing
@@ -547,7 +556,6 @@ function move(direction) {
         if (result.moved) moved = true;
         mergesByRow[r] = result.merges.slice();
         result.merges.forEach(idx => mergePositionsTransformed.push({ r, c: idx }));
-        result.quantumJumps.forEach(idx => quantumPositionsTransformed.push({ r, c: idx }));
         if (result.removedEchoId) removedEchoIds.push(result.removedEchoId);
     }
     
@@ -565,7 +573,6 @@ function move(direction) {
         }
     }
     const mergePositions = mergePositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
-    const quantumPositions = quantumPositionsTransformed.map(pos => transformCoord(pos.r, pos.c, direction, true));
     
     const prevTilePositions = new Map();
     for (let r = 0; r < settings.boardSize; r++) {
@@ -616,16 +623,10 @@ function move(direction) {
     const movedPositions = Array.from(movedMap.values());
 
     if (moved) {
-        gameState.score += scoreGained;
-        
-        // Update best score
-        if (gameState.score > gameState.bestScore) {
-            gameState.bestScore = gameState.score;
-            localStorage.setItem('quantum2048_best', gameState.bestScore.toString());
-        }
+        updateScore(scoreGained);
         
         updateDisplay();
-        renderBoard(mergePositions, movedPositions, quantumPositions);
+        renderBoard(mergePositions, movedPositions);
 
         // Wait for merge animations to finish before spawning new tile.
         // Disable input during the animation to avoid inconsistencies.
@@ -636,11 +637,16 @@ function move(direction) {
                 clearRandomRow();
                 gameState.clearRowFlag = false;
             }
-            renderBoard();
+
+            const qResult = performQuantumJumps();
+            updateScore(qResult.scoreGained);
+
+            renderBoard(qResult.mergedPositions, qResult.movedTiles, qResult.quantumPositions);
+            updateDisplay();
             updateBackgroundLevel();
             checkAchievements();
 
-            if (quantumPositions.length > 0) {
+            if (qResult.quantumPositions.length > 0) {
                 createParticleEffect('quantum');
             } else {
                 createParticleEffect('merge');
@@ -722,7 +728,6 @@ function processRow(row) {
     let score = 0;
     let moved = row.some((tile, i) => tile.value !== (newRow[i] ? newRow[i].value : 0));
     const merges = [];
-    const quantumJumps = [];
     let removedEchoId = null;
     
     // Merge adjacent equal tiles
@@ -732,13 +737,6 @@ function processRow(row) {
             const right = newRow[i + 1];
             newRow[i] = { ...left, value: left.value * 2, type: 'normal' };
             let gained = newRow[i].value;
-            let quantum = false;
-
-            // Check for quantum bonus
-            if (Math.random() < settings.quantumBonusChance) {
-                gained *= 2;
-                quantum = true;
-            }
 
             if (left.type === 'phase' || right.type === 'phase') {
                 gameState.gravityRandomizeNext = true;
@@ -759,7 +757,6 @@ function processRow(row) {
             score += gained;
             newRow.splice(i + 1, 1);
             merges.push(i);
-            if (quantum) quantumJumps.push(i);
             moved = true;
         }
     }
@@ -781,7 +778,7 @@ function processRow(row) {
         newRow.push(createTile());
     }
 
-    return { row: newRow, score, moved, merges, quantumJumps, removedEchoId };
+    return { row: newRow, score, moved, merges, removedEchoId };
 }
 
 // Check achievements
@@ -877,6 +874,51 @@ function clearRandomRow() {
     for (let c = 0; c < settings.boardSize; c++) {
         gameState.board[row][c] = createTile();
     }
+}
+
+function performQuantumJumps() {
+    const mergedPositions = [];
+    const movedTiles = [];
+    const quantumPositions = [];
+    let scoreGained = 0;
+    const visited = new Set();
+    const size = settings.boardSize;
+
+    function handlePair(r1, c1, r2, c2) {
+        const key1 = `${r1},${c1}`;
+        const key2 = `${r2},${c2}`;
+        if (visited.has(key1) || visited.has(key2)) return;
+        const t1 = gameState.board[r1][c1];
+        const t2 = gameState.board[r2][c2];
+        if (t1.value > 0 && t1.value === t2.value && Math.random() < settings.quantumBonusChance) {
+            const chooseFirst = Math.random() < 0.5;
+            const targetR = chooseFirst ? r1 : r2;
+            const targetC = chooseFirst ? c1 : c2;
+            const sourceR = chooseFirst ? r2 : r1;
+            const sourceC = chooseFirst ? c2 : c1;
+            const target = gameState.board[targetR][targetC];
+
+            target.value *= 2;
+            gameState.board[sourceR][sourceC] = createTile();
+
+            mergedPositions.push({ r: targetR, c: targetC });
+            movedTiles.push({ r: targetR, c: targetC, dr: sourceR - targetR, dc: sourceC - targetC });
+            quantumPositions.push({ r: targetR, c: targetC });
+            scoreGained += target.value;
+
+            visited.add(key1);
+            visited.add(key2);
+        }
+    }
+
+    for (let r = 0; r < size - 1; r++) {
+        for (let c = 0; c < size - 1; c++) {
+            handlePair(r, c, r + 1, c + 1);
+            handlePair(r + 1, c, r, c + 1);
+        }
+    }
+
+    return { mergedPositions, movedTiles, quantumPositions, scoreGained };
 }
 
 // Check if game is over
@@ -1107,6 +1149,8 @@ if (typeof module !== 'undefined' && module.exports) {
         renderBoard,
         spawnPhaseShiftTile,
         spawnEchoDuplicateTile,
-        spawnNexusPortalTile
+        spawnNexusPortalTile,
+        performQuantumJumps,
+        updateScore
     };
 }
