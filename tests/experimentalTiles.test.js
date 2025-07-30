@@ -42,14 +42,14 @@ test('phase shift tile toggles visibility based on counter', () => {
   let tile = gameState.board[0][0];
   tile.phaseCounter = 1;
   move('left');
-  gameState.gameActive = true;
+  jest.runAllTimers();
   tile = gameState.board[0][0];
   expect(tile.phased).toBe(true);
   expect(tile.value).toBe(0);
   const stored = tile.storedValue;
   tile.phaseCounter = 1;
   move('left');
-  gameState.gameActive = true;
+  jest.runAllTimers();
   tile = gameState.board[0][0];
   expect(tile.phased).toBe(false);
   expect(tile.value).toBe(stored);
@@ -65,7 +65,7 @@ test('phased tile allows other tiles to pass through', () => {
   gameState.board[0][1].value = 0;
   jest.useFakeTimers();
   move('right');
-  gameState.gameActive = true;
+  jest.runAllTimers();
   expect(gameState.board[0][settings.boardSize - 1].value).toBe(2);
   expect(gameState.board[0][1].phased).toBe(true);
   jest.clearAllTimers();

@@ -848,34 +848,38 @@ function baseProcessRow(row, targetLength) {
 // Process a single row (merge tiles to the left) while respecting phased-out
 // phase shift tiles that should be ignored for movement but remain in place.
 function processRow(row) {
-    const intangibleIndices = [];
-    const intangibleTiles = {};
+    const intangible = new Map();
     const working = [];
+
     for (let i = 0; i < row.length; i++) {
         const tile = row[i];
         if (tile.type === 'phase' && tile.phased) {
-            intangibleIndices.push(i);
-            intangibleTiles[i] = tile;
+            intangible.set(i, tile);
         } else {
             working.push(tile);
         }
     }
 
-    const result = baseProcessRow(working, row.length - intangibleIndices.length);
+    const result = baseProcessRow(working, row.length - intangible.size);
+
     const finalRow = [];
-    let j = 0;
+    let workingIdx = 0;
     for (let i = 0; i < row.length; i++) {
-        if (intangibleIndices.includes(i)) {
-            finalRow.push(intangibleTiles[i]);
+        if (intangible.has(i)) {
+            finalRow.push(intangible.get(i));
         } else {
-            finalRow.push(result.row[j++] || createTile());
+            finalRow.push(result.row[workingIdx++] || createTile());
         }
     }
 
-    const adjustedMerges = result.merges.map(idx => {
-        const shift = intangibleIndices.filter(pos => pos <= idx).length;
-        return idx + shift;
-    });
+    const workingToFinalMap = [];
+    for (let i = 0; i < row.length; i++) {
+        if (!intangible.has(i)) {
+            workingToFinalMap.push(i);
+        }
+    }
+
+    const adjustedMerges = result.merges.map(idx => workingToFinalMap[idx]);
 
     const moved = row.some((tile, i) => tile.value !== finalRow[i].value);
     return {
