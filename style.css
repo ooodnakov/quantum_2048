@@ -748,6 +748,26 @@ body {
     overflow-x: hidden;
 }
 
+/* Language switch positioning */
+.language-switch {
+    position: fixed;
+    top: var(--space-16);
+    right: var(--space-16);
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    z-index: 2000;
+}
+
+.language-switch label {
+    font-weight: var(--font-weight-medium);
+}
+
+.language-switch select {
+    cursor: pointer;
+    width: auto;
+}
+
 /* Screen Management */
 .screen {
     position: fixed;

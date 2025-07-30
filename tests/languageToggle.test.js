@@ -35,4 +35,10 @@ describe('language toggle', () => {
     const appReloaded = require('../app.js');
     expect(appReloaded.getCurrentLanguage()).toBe('ru');
   });
+
+  test('handleLanguageChange alias works', () => {
+    const app = require('../app.js');
+    window.handleLanguageChange('ru');
+    expect(app.getCurrentLanguage()).toBe('ru');
+  });
 });
