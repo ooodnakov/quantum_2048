@@ -170,6 +170,11 @@ function createTile(value = 0, type = 'normal', extra = {}) {
     return { id: value === 0 ? null : gameState.nextId++, value, type, ...extra };
 }
 
+function isCellEmpty(r, c) {
+    const cell = gameState.board[r][c];
+    return cell.value === 0 && cell.type !== 'phase';
+}
+
 function getPhaseCycle() {
     return 3 + Math.floor(Math.random() * 3);
 }
@@ -186,7 +191,7 @@ function spawnEchoDuplicateTile(r, c, value) {
     const emptyCells = [];
     for (let rr = 0; rr < settings.boardSize; rr++) {
         for (let cc = 0; cc < settings.boardSize; cc++) {
-            if (gameState.board[rr][cc].value === 0) {
+            if (isCellEmpty(rr, cc)) {
                 emptyCells.push({ r: rr, c: cc });
             }
         }
@@ -270,8 +275,8 @@ function addRandomTile() {
     const emptyCells = [];
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
-            if (gameState.board[r][c].value === 0) {
-                emptyCells.push({r, c});
+            if (isCellEmpty(r, c)) {
+                emptyCells.push({ r, c });
             }
         }
     }
@@ -314,7 +319,7 @@ function addTileWithValue(value) {
     const emptyCells = [];
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
-            if (gameState.board[r][c].value === 0) {
+            if (isCellEmpty(r, c)) {
                 emptyCells.push({ r, c });
             }
         }
@@ -1055,7 +1060,7 @@ function isGameOver() {
     // Check for empty cells
     for (let r = 0; r < settings.boardSize; r++) {
         for (let c = 0; c < settings.boardSize; c++) {
-            if (gameState.board[r][c].value === 0) return false;
+            if (isCellEmpty(r, c)) return false;
         }
     }
     
