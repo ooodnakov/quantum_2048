@@ -38,6 +38,16 @@ const moveQueue = [];
 
 const GRAVITY_DIRECTIONS = ['north', 'east', 'south', 'west'];
 
+function applyGravityToDirection(direction) {
+    const directions = ['up', 'right', 'down', 'left'];
+    const indexMap = { up: 0, right: 1, down: 2, left: 3 };
+    const rotationMap = { south: 0, east: 1, north: 2, west: 3 };
+    const idx = indexMap[direction];
+    if (idx === undefined) return direction;
+    const rotation = rotationMap[gameState.gravity] || 0;
+    return directions[(idx + rotation) % 4];
+}
+
 // Game configuration
 const TILE_COLORS = {
     2: '#ff6b6b',
@@ -560,6 +570,7 @@ function getMoveDirection(key) {
 
 // Move tiles
 function move(direction) {
+    direction = applyGravityToDirection(direction);
 
     updatePhaseTiles();
     updateEchoPairs();
@@ -1266,6 +1277,7 @@ if (typeof module !== 'undefined' && module.exports) {
         formatScoreDisplay,
         deleteTileAt,
         enterDeleteMode,
-        handleBoardClick
+        handleBoardClick,
+        applyGravityToDirection
     };
 }

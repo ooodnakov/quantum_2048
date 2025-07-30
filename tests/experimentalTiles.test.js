@@ -26,6 +26,7 @@ beforeEach(() => {
     Array.from({ length: settings.boardSize }, () => ({ id: null, value: 0 }))
   ));
   gameState.gameActive = true;
+  gameState.gravity = 'south';
   gameState.crystals = 0;
   gameState.echoPairs.clear();
 });
