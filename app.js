@@ -521,9 +521,13 @@ function rewindTime() {
 function deleteTileAt(r, c) {
     if (gameState.voidCrystals <= 0) return false;
     if (r < 0 || r >= settings.boardSize || c < 0 || c >= settings.boardSize) return false;
-    if (gameState.board[r][c].value === 0) return false;
+    const tileValue = gameState.board[r][c].value;
+    if (tileValue === 0) return false;
     gameState.board[r][c] = createTile();
     gameState.voidCrystals -= 1;
+    if (tileValue === gameState.highestTile) {
+        gameState.highestTile = getMaxTile(gameState.board);
+    }
     updateDisplay();
     renderBoard();
     return true;
@@ -538,9 +542,11 @@ function enterDeleteMode() {
 
 function handleBoardClick(e) {
     if (!gameState.deleteMode) return;
+    const tileElement = e.target.closest('.tile');
+    if (!tileElement) return;
     const board = document.getElementById('gameBoard');
     const tiles = Array.from(board.children);
-    const index = tiles.indexOf(e.target);
+    const index = tiles.indexOf(tileElement);
     if (index === -1) return;
     const r = Math.floor(index / settings.boardSize);
     const c = index % settings.boardSize;

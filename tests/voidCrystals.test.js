@@ -53,4 +53,15 @@ describe('void crystals', () => {
     expect(gameState.board[0][0].value).toBe(0);
     expect(gameState.voidCrystals).toBe(0);
   });
+
+  test('deleting highest tile updates gameState.highestTile', () => {
+    gameState.board[0][0] = { id: 1, value: 16 };
+    gameState.board[0][1] = { id: 2, value: 8 };
+    gameState.highestTile = 16;
+    gameState.voidCrystals = 1;
+
+    deleteTileAt(0, 0);
+
+    expect(gameState.highestTile).toBe(8);
+  });
 });
