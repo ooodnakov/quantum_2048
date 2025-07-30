@@ -30,6 +30,8 @@ The design also introduces several advanced tile behaviors:
 
 These experimental blocks push the traditional mechanics into new territory, encouraging daring strategies and careful timing.
 
+Each block type is styled with its own border color and effects so they are easy to spot during play.
+
 
 ## Continuous Integration
 This project uses GitHub Actions to run ESLint and Jest on every push and pull request.
