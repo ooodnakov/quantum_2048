@@ -23,6 +23,54 @@ beforeEach(() => {
   gameState.echoPairs.clear();
 });
 
+test('phase shift merge randomizes gravity on next move', () => {
+  spawnPhaseShiftTile(0, 0, 2);
+  gameState.board[0][1] = { id: 99, value: 2 };
+  const startGravity = gameState.gravity;
+  move('left');
+  expect(gameState.gravity).toBe(startGravity);
+  jest.spyOn(Math, 'random').mockReturnValue(0);
+  move('left');
+  expect(gameState.gravity).toBe('north');
+  Math.random.mockRestore();
+});
+
+test('phase shift tile toggles visibility based on counter', () => {
+  jest.useFakeTimers();
+  spawnPhaseShiftTile(0, 0, 2);
+  let tile = gameState.board[0][0];
+  tile.phaseCounter = 1;
+  move('left');
+  jest.runAllTimers();
+  tile = gameState.board[0][0];
+  expect(tile.phased).toBe(true);
+  expect(tile.value).toBe(0);
+  const stored = tile.storedValue;
+  tile.phaseCounter = 1;
+  move('left');
+  jest.runAllTimers();
+  tile = gameState.board[0][0];
+  expect(tile.phased).toBe(false);
+  expect(tile.value).toBe(stored);
+  jest.clearAllTimers();
+  jest.useRealTimers();
+});
+
+test('phased tile allows other tiles to pass through', () => {
+  gameState.board[0][0] = { id: 1, value: 2 };
+  spawnPhaseShiftTile(0, 1, 4);
+  gameState.board[0][1].phased = true;
+  gameState.board[0][1].storedValue = 4;
+  gameState.board[0][1].value = 0;
+  jest.useFakeTimers();
+  move('right');
+  jest.runAllTimers();
+  expect(gameState.board[0][settings.boardSize - 1].value).toBe(2);
+  expect(gameState.board[0][1].phased).toBe(true);
+  jest.clearAllTimers();
+  jest.useRealTimers();
+});
+
 test('echo duplicate merge grants crystal and removes echo', () => {
   spawnEchoDuplicateTile(0, 0, 2);
   const pair = [...gameState.echoPairs.values()][0];

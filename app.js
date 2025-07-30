@@ -554,6 +554,7 @@ function getMoveDirection(key) {
 // Move tiles
 function move(direction) {
 
+    updatePhaseTiles();
     updateEchoPairs();
 
     if (!gameState.gameActive) {
@@ -750,7 +751,7 @@ function getSecondTileIndices(row) {
 }
 
 // Process a single row (merge tiles to the left)
-function processRow(row) {
+function baseProcessRow(row, targetLength) {
     const newRow = row.filter(tile => tile.value !== 0 || tile.type === 'portal');
     let score = 0;
     let moved = row.some((tile, i) => tile.value !== (newRow[i] ? newRow[i].value : 0));
@@ -788,7 +789,7 @@ function processRow(row) {
     for (let i = newRow.length - 2; i >= 0; i--) {
         if (newRow[i].type === 'portal' && newRow[i + 1].type !== 'portal') {
             const tele = newRow.splice(i + 1, 1)[0];
-            while (newRow.length < settings.boardSize - 1) {
+            while (newRow.length < targetLength - 1) {
                 newRow.push(createTile());
             }
             newRow.push(tele);
@@ -797,11 +798,57 @@ function processRow(row) {
     }
 
     // Fill the rest with zeros
-    while (newRow.length < settings.boardSize) {
+    while (newRow.length < targetLength) {
         newRow.push(createTile());
     }
 
     return { row: newRow, score, moved, merges, removedEchoId };
+}
+
+// Process a single row (merge tiles to the left) while respecting phased-out
+// phase shift tiles that should be ignored for movement but remain in place.
+function processRow(row) {
+    const intangible = new Map();
+    const working = [];
+
+    for (let i = 0; i < row.length; i++) {
+        const tile = row[i];
+        if (tile.type === 'phase' && tile.phased) {
+            intangible.set(i, tile);
+        } else {
+            working.push(tile);
+        }
+    }
+
+    const result = baseProcessRow(working, row.length - intangible.size);
+
+    const finalRow = [];
+    let workingIdx = 0;
+    for (let i = 0; i < row.length; i++) {
+        if (intangible.has(i)) {
+            finalRow.push(intangible.get(i));
+        } else {
+            finalRow.push(result.row[workingIdx++] || createTile());
+        }
+    }
+
+    const workingToFinalMap = [];
+    for (let i = 0; i < row.length; i++) {
+        if (!intangible.has(i)) {
+            workingToFinalMap.push(i);
+        }
+    }
+
+    const adjustedMerges = result.merges.map(idx => workingToFinalMap[idx]);
+
+    const moved = row.some((tile, i) => tile.value !== finalRow[i].value);
+    return {
+        row: finalRow,
+        score: result.score,
+        moved,
+        merges: adjustedMerges,
+        removedEchoId: result.removedEchoId
+    };
 }
 
 // Check achievements
@@ -886,6 +933,29 @@ function createParticleEffect(type) {
                 container.removeChild(particle);
             }
         }, 1000);
+    }
+}
+
+function updatePhaseTiles() {
+    for (let r = 0; r < settings.boardSize; r++) {
+        for (let c = 0; c < settings.boardSize; c++) {
+            const tile = gameState.board[r][c];
+            if (tile.type === 'phase') {
+                tile.phaseCounter -= 1;
+                if (tile.phaseCounter <= 0) {
+                    if (tile.phased) {
+                        tile.value = tile.storedValue;
+                        delete tile.storedValue;
+                        tile.phased = false;
+                    } else {
+                        tile.storedValue = tile.value;
+                        tile.value = 0;
+                        tile.phased = true;
+                    }
+                    tile.phaseCounter = getPhaseCycle();
+                }
+            }
+        }
     }
 }
 
