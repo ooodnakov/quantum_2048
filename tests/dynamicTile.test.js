@@ -41,16 +41,19 @@ test('quantum jump probability follows settings', () => {
   gameState.board[1][1].value = 2;
   jest.spyOn(Math, 'random').mockReturnValue(0);
   const original = settings.quantumBonusChance;
-  settings.quantumBonusChance = 0;
-  let result = performQuantumJumps();
-  expect(result.quantumPositions).toEqual([]);
-  expect(gameState.board[0][0].value).toBe(2);
-  expect(gameState.board[1][1].value).toBe(2);
-  settings.quantumBonusChance = 1;
-  result = performQuantumJumps();
-  expect(result.quantumPositions).toEqual([{ r: 0, c: 0 }]);
-  expect(gameState.board[0][0].value).toBe(4);
-  expect(gameState.board[1][1].value).toBe(0);
-  settings.quantumBonusChance = original;
-  Math.random.mockRestore();
+  try {
+    settings.quantumBonusChance = 0;
+    let result = performQuantumJumps();
+    expect(result.quantumPositions).toEqual([]);
+    expect(gameState.board[0][0].value).toBe(2);
+    expect(gameState.board[1][1].value).toBe(2);
+    settings.quantumBonusChance = 1;
+    result = performQuantumJumps();
+    expect(result.quantumPositions).toEqual([{ r: 0, c: 0 }]);
+    expect(gameState.board[0][0].value).toBe(4);
+    expect(gameState.board[1][1].value).toBe(0);
+  } finally {
+    settings.quantumBonusChance = original;
+    Math.random.mockRestore();
+  }
 });
